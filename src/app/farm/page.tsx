@@ -951,12 +951,6 @@ export default function FarmPage() {
                     <img src="/images/02.png" alt="金币" />
                     {day.gold}
                   </span>
-                  {day.diamond > 0 && (
-                    <span className="diamond-reward">
-                      <img src="/images/03.png" alt="钻石" />
-                      {day.diamond}
-                    </span>
-                  )}
                 </div>
                 <div className="day-status">
                   {day.signed ? '✓ 已签' : (day.isToday ? '待签' : '')}
@@ -976,14 +970,8 @@ export default function FarmPage() {
                 🎁 今日可领：
                 <span className="reward-gold">
                   <img src="/images/02.png" alt="金币" />
-                  {signData?.nextReward?.gold || 100}
+                  {signData?.nextReward?.gold || 100} 金币
                 </span>
-                {signData?.nextReward?.diamond && signData.nextReward.diamond > 0 && (
-                  <span className="reward-diamond">
-                    <img src="/images/03.png" alt="钻石" />
-                    {signData.nextReward.diamond}
-                  </span>
-                )}
               </div>
             )}
           </div>
@@ -996,15 +984,11 @@ export default function FarmPage() {
             {signLoading ? '⏳ 签到中...' : (signData?.hasSignedToday ? '✓ 已签到' : '🎉 立即签到')}
           </div>
           
-          {/* 资产信息 */}
+          {/* 资产信息 - 只显示金币 */}
           <div className="qiandao-assets">
             <div className="asset-item">
               <img src="/images/02.png" alt="金币" />
-              <span>{signData?.totalGold || user?.userlist?.gold || '0'}</span>
-            </div>
-            <div className="asset-item">
-              <img src="/images/03.png" alt="钻石" />
-              <span>{signData?.totalDiamond || user?.userlist?.zs || '0'}</span>
+              <span>当前金币: {signData?.totalGold || user?.userlist?.gold || '0'}</span>
             </div>
           </div>
         </div>

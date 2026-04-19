@@ -14,15 +14,15 @@ async function getCurrentUserId(request: NextRequest): Promise<number | null> {
   return null;
 }
 
-// 默认签到奖励配置
+// 默认签到奖励配置 - 只有金币
 const DEFAULT_SIGN_REWARDS = [
-  { day: 1, gold: 100, diamond: 0 },
-  { day: 2, gold: 120, diamond: 0 },
-  { day: 3, gold: 140, diamond: 0 },
-  { day: 4, gold: 160, diamond: 0 },
-  { day: 5, gold: 180, diamond: 0 },
-  { day: 6, gold: 200, diamond: 0 },
-  { day: 7, gold: 300, diamond: 1 },
+  { day: 1, gold: 100 },
+  { day: 2, gold: 120 },
+  { day: 3, gold: 140 },
+  { day: 4, gold: 160 },
+  { day: 5, gold: 180 },
+  { day: 6, gold: 200 },
+  { day: 7, gold: 300 },
 ];
 
 // 获取签到奖励配置
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
       orderBy: { time: 'asc' },
     });
 
-    // 构建签到日历 (最近7天)
+    // 构建签到日历 (最近7天) - 只有金币奖励
     const calendar = [];
     for (let i = 0; i < 7; i++) {
       const dayDate = new Date(today);
@@ -151,7 +151,6 @@ export async function GET(request: NextRequest) {
         day: dayNum,
         date: dayDate.getDate(),
         gold: reward.gold,
-        diamond: reward.diamond,
         signed,
         isToday: dayDate.toDateString() === today.toDateString(),
       });
