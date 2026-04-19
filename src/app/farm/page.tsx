@@ -70,6 +70,24 @@ export default function FarmPage() {
   // 按钮激活状态
   const [activeLeftBtn, setActiveLeftBtn] = useState<number | null>(null);
   const [activeRightBtn, setActiveRightBtn] = useState<number | null>(null);
+  
+  // 签到相关状态
+  const [signData, setSignData] = useState<{
+    hasSignedToday: boolean;
+    continuousDays: number;
+    nextReward: { gold: number; diamond: number };
+    calendar: Array<{
+      day: number;
+      date: number;
+      gold: number;
+      diamond: number;
+      signed: boolean;
+      isToday: boolean;
+    }>;
+    totalGold: number;
+    totalDiamond: number;
+  } | null>(null);
+  const [signLoading, setSignLoading] = useState(false);
 
   // 设置 rem 单位和引入 CSS
   useEffect(() => {
@@ -260,6 +278,48 @@ export default function FarmPage() {
     return null;
   };
 
+  // 获取签到状态
+  const fetchSignData = async () => {
+    try {
+      const res = await fetch('/api/farm/sign');
+      const data = await res.json();
+      if (data.success) {
+        setSignData(data.data);
+      }
+    } catch (error) {
+      console.error('获取签到状态失败:', error);
+    }
+  };
+
+  // 执行签到
+  const handleSign = async () => {
+    if (signLoading || signData?.hasSignedToday) return;
+    
+    setSignLoading(true);
+    try {
+      const res = await fetch('/api/farm/sign', { method: 'POST' });
+      const data = await res.json();
+      
+      if (data.success) {
+        showToast(`签到成功！获得 ${data.data.gold} 金币${data.data.diamond > 0 ? ` 和 ${data.data.diamond} 钻石` : ''}`);
+        fetchSignData();
+        fetchUserData();
+      } else {
+        showToast(data.message || '签到失败', 'error');
+      }
+    } catch (error) {
+      showToast('签到失败，请重试', 'error');
+    } finally {
+      setSignLoading(false);
+    }
+  };
+
+  // 打开签到弹窗
+  const openSignModal = () => {
+    fetchSignData();
+    setShowModal('qiandao');
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -405,7 +465,7 @@ export default function FarmPage() {
       </div>
 
       {/* 签到 */}
-      <div className="qiandao animated pulse infinite" onClick={() => showToast('签到成功！获得100金币')}></div>
+      <div className="qiandao animated pulse infinite" onClick={openSignModal}></div>
 
       {/* 右上角信息 */}
       <div className="rightTop">
@@ -835,6 +895,95 @@ export default function FarmPage() {
           <div className="qiehuan animated"></div>
           <div className="audio animated">
             <img src="/picture/guanbi.png" alt="" />
+          </div>
+        </div>
+      )}
+
+      {/* 签到弹窗 */}
+      {showModal === 'qiandao' && (
+        <div className="qiandaoBox animated" style={{ display: 'block' }}>
+          <div className="remove animated" onClick={() => setShowModal(null)}></div>
+          
+          {/* 签到标题 */}
+          <div className="qiandao-title">
+            <img src="/picture/qiandao-title.png" alt="每日签到" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <span>每日签到</span>
+          </div>
+          
+          {/* 连续签到天数 */}
+          <div className="qiandao-count">
+            已连续签到 <span className="qiandao-days">{signData?.continuousDays || 0}</span> 天
+          </div>
+          
+          {/* 签到日历 */}
+          <div className="qiandao-calendar">
+            {signData?.calendar.map((day, index) => (
+              <div 
+                key={index} 
+                className={`qiandao-day ${day.signed ? 'signed' : ''} ${day.isToday ? 'today' : ''}`}
+              >
+                <div className="day-num">第{day.day}天</div>
+                <div className="day-reward">
+                  <span className="gold-reward">
+                    <img src="/images/02.png" alt="金币" />
+                    {day.gold}
+                  </span>
+                  {day.diamond > 0 && (
+                    <span className="diamond-reward">
+                      <img src="/images/03.png" alt="钻石" />
+                      {day.diamond}
+                    </span>
+                  )}
+                </div>
+                <div className="day-status">
+                  {day.signed ? '✓' : (day.isToday ? '今日' : '')}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* 今日奖励 */}
+          <div className="qiandao-today-reward">
+            {signData?.hasSignedToday ? (
+              <div className="qiandao-done">
+                <img src="/picture/qiandao-done.png" alt="已签到" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <span>今日已签到</span>
+              </div>
+            ) : (
+              <div className="qiandao-reward-info">
+                今日签到可获得：
+                <span className="reward-gold">
+                  <img src="/images/02.png" alt="金币" />
+                  {signData?.nextReward?.gold || 100} 金币
+                </span>
+                {signData?.nextReward?.diamond && signData.nextReward.diamond > 0 && (
+                  <span className="reward-diamond">
+                    <img src="/images/03.png" alt="钻石" />
+                    {signData.nextReward.diamond} 钻石
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* 签到按钮 */}
+          <div 
+            className={`qiandao-btn ${signData?.hasSignedToday ? 'disabled' : ''} ${signLoading ? 'loading' : ''}`}
+            onClick={handleSign}
+          >
+            {signLoading ? '签到中...' : (signData?.hasSignedToday ? '已签到' : '立即签到')}
+          </div>
+          
+          {/* 资产信息 */}
+          <div className="qiandao-assets">
+            <div className="asset-item">
+              <img src="/images/02.png" alt="金币" />
+              <span>{signData?.totalGold || user?.userlist?.gold || '0'}</span>
+            </div>
+            <div className="asset-item">
+              <img src="/images/03.png" alt="钻石" />
+              <span>{signData?.totalDiamond || user?.userlist?.zs || '0'}</span>
+            </div>
           </div>
         </div>
       )}

@@ -1,0 +1,254 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { getSession } from '@/lib/session-store';
+
+// 获取当前用户ID
+async function getCurrentUserId(request: NextRequest): Promise<number | null> {
+  const sessionToken = request.cookies.get('session_token');
+  if (sessionToken) {
+    const session = getSession(sessionToken.value);
+    if (session) {
+      return session.userId;
+    }
+  }
+  return null;
+}
+
+// 签到奖励配置
+const SIGN_REWARDS = [
+  { day: 1, gold: 100, diamond: 0 },
+  { day: 2, gold: 120, diamond: 0 },
+  { day: 3, gold: 140, diamond: 0 },
+  { day: 4, gold: 160, diamond: 0 },
+  { day: 5, gold: 180, diamond: 0 },
+  { day: 6, gold: 200, diamond: 0 },
+  { day: 7, gold: 300, diamond: 1 },
+];
+
+// 获取签到状态
+export async function GET(request: NextRequest) {
+  try {
+    const userId = await getCurrentUserId(request);
+    if (!userId) {
+      return NextResponse.json({ success: false, message: '请先登录' }, { status: 401 });
+    }
+
+    // 获取用户数据
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      include: { userlist: true },
+    });
+
+    if (!user || !user.userlist) {
+      return NextResponse.json({ success: false, message: '用户数据不存在' }, { status: 404 });
+    }
+
+    const userlist = user.userlist;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // 获取上次签到时间
+    const lastSignTime = userlist.sign_time;
+    let hasSignedToday = false;
+    let continuousDays = userlist.sign || 0;
+    
+    if (lastSignTime) {
+      const lastSignDate = new Date(lastSignTime);
+      const lastSignDay = new Date(lastSignDate.getFullYear(), lastSignDate.getMonth(), lastSignDate.getDate());
+      
+      if (lastSignDay.getTime() === today.getTime()) {
+        hasSignedToday = true;
+      } else {
+        // 检查是否连续签到（昨天签到的）
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (lastSignDay.getTime() !== yesterday.getTime()) {
+          // 不是连续签到，重置为0
+          continuousDays = 0;
+        }
+      }
+    }
+
+    // 获取本周签到记录
+    const weekStart = new Date(today);
+    weekStart.setDate(weekStart.getDate() - today.getDay() + 1); // 周一
+    
+    const signRecords = await db.signRecord.findMany({
+      where: {
+        userid: userId,
+        time: {
+          gte: weekStart,
+        },
+      },
+      orderBy: { time: 'asc' },
+    });
+
+    // 构建签到日历 (最近7天)
+    const calendar = [];
+    for (let i = 0; i < 7; i++) {
+      const dayDate = new Date(today);
+      dayDate.setDate(dayDate.getDate() - (6 - i));
+      const dayNum = i + 1; // 1-7
+      
+      const reward = SIGN_REWARDS.find(r => r.day === dayNum) || SIGN_REWARDS[0];
+      const signed = signRecords.some(r => {
+        const recordDate = new Date(r.time!);
+        return recordDate.toDateString() === dayDate.toDateString();
+      });
+      
+      calendar.push({
+        day: dayNum,
+        date: dayDate.getDate(),
+        gold: reward.gold,
+        diamond: reward.diamond,
+        signed,
+        isToday: dayDate.toDateString() === today.toDateString(),
+      });
+    }
+
+    // 计算下次签到的奖励
+    const nextDay = (continuousDays % 7) + 1;
+    const nextReward = SIGN_REWARDS.find(r => r.day === nextDay) || SIGN_REWARDS[0];
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        hasSignedToday,
+        continuousDays,
+        nextReward,
+        calendar,
+        totalGold: parseInt(userlist.gold || '0'),
+        totalDiamond: parseInt(userlist.zs || '0'),
+      },
+    });
+
+  } catch (error) {
+    console.error('获取签到状态失败:', error);
+    return NextResponse.json({ 
+      success: false, 
+      message: '获取签到状态失败' 
+    }, { status: 500 });
+  }
+}
+
+// 执行签到
+export async function POST(request: NextRequest) {
+  try {
+    const userId = await getCurrentUserId(request);
+    if (!userId) {
+      return NextResponse.json({ success: false, message: '请先登录' }, { status: 401 });
+    }
+
+    // 获取用户数据
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      include: { userlist: true },
+    });
+
+    if (!user || !user.userlist) {
+      return NextResponse.json({ success: false, message: '用户数据不存在' }, { status: 404 });
+    }
+
+    const userlist = user.userlist;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // 检查今天是否已签到
+    const lastSignTime = userlist.sign_time;
+    if (lastSignTime) {
+      const lastSignDate = new Date(lastSignTime);
+      const lastSignDay = new Date(lastSignDate.getFullYear(), lastSignDate.getMonth(), lastSignDate.getDate());
+      
+      if (lastSignDay.getTime() === today.getTime()) {
+        return NextResponse.json({ 
+          success: false, 
+          message: '今天已经签到过了' 
+        });
+      }
+    }
+
+    // 计算连续签到天数
+    let continuousDays = userlist.sign || 0;
+    
+    if (lastSignTime) {
+      const lastSignDate = new Date(lastSignTime);
+      const lastSignDay = new Date(lastSignDate.getFullYear(), lastSignDate.getMonth(), lastSignDate.getDate());
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      if (lastSignDay.getTime() === yesterday.getTime()) {
+        // 连续签到
+        continuousDays++;
+      } else {
+        // 中断了，重新开始
+        continuousDays = 1;
+      }
+    } else {
+      // 首次签到
+      continuousDays = 1;
+    }
+
+    // 计算奖励（第7天后循环）
+    const rewardDay = ((continuousDays - 1) % 7) + 1;
+    const reward = SIGN_REWARDS.find(r => r.day === rewardDay) || SIGN_REWARDS[0];
+
+    // 更新用户数据
+    const currentGold = parseInt(userlist.gold || '0');
+    const currentDiamond = parseInt(userlist.zs || '0');
+    
+    await db.userlist.update({
+      where: { id: userlist.id },
+      data: {
+        sign: continuousDays,
+        sign_time: now,
+        gold: String(currentGold + reward.gold),
+        zs: String(currentDiamond + reward.diamond),
+      },
+    });
+
+    // 记录签到日志
+    await db.signRecord.create({
+      data: {
+        userid: userId,
+        username: user.username,
+        time: now,
+        type: 1,
+      },
+    });
+
+    // 同时记录到用户日志
+    await db.userLog.create({
+      data: {
+        userid: userId,
+        username: user.username,
+        time: Math.floor(Date.now() / 1000),
+        record: `签到成功，获得${reward.gold}金币${reward.diamond > 0 ? `和${reward.diamond}钻石` : ''}`,
+        score: reward.gold,
+        source: 0,
+      },
+    });
+
+    console.log(`用户 ${user.username} 签到成功，连续 ${continuousDays} 天，获得 ${reward.gold} 金币，${reward.diamond} 钻石`);
+
+    return NextResponse.json({
+      success: true,
+      message: '签到成功！',
+      data: {
+        continuousDays,
+        rewardDay,
+        gold: reward.gold,
+        diamond: reward.diamond,
+        totalGold: currentGold + reward.gold,
+        totalDiamond: currentDiamond + reward.diamond,
+      },
+    });
+
+  } catch (error) {
+    console.error('签到失败:', error);
+    return NextResponse.json({ 
+      success: false, 
+      message: '签到失败，请重试' 
+    }, { status: 500 });
+  }
+}
