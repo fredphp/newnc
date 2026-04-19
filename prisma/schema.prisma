@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// 开心农场 - 匹配原项目数据库结构
+// 基于 https://github.com/fredphp/nongchang.git
 
 generator client {
   provider = "prisma-client-js"
@@ -10,130 +10,179 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==================== 用户模块 ====================
+// ==================== 用户表 ====================
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  password     String
-  nickname     String?
-  avatar       String?
-  coins        Int      @default(1000)  // 初始金币
-  exp          Int      @default(0)     // 经验值
-  level        Int      @default(1)     // 等级
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
+  id          Int       @id @default(autoincrement())
+  username    String?   @db.VarChar(50)
+  password    String    @default("") @db.VarChar(50)
+  nickname    String?   @db.VarChar(255)
+  phone       String?   @db.VarChar(50)
+  QQ          String?   @db.VarChar(50)
+  weixin      String?   @db.VarChar(50)
+  zfb         String?   @db.VarChar(50)
+  realname    String?   @db.VarChar(255)
+  idcard      String?   @db.VarChar(255)
+  regtime     DateTime? @db.DateTime
+  logtime     DateTime? @db.DateTime
+  lognum      Int?      @default(1)
+  logip       String?   @db.VarChar(255)
+  RegIP       String?   @db.VarChar(50)
+  status      Int?      @default(1)
+  remark      String?   @db.VarChar(50)
+  upxianid    Int?      @default(0)
+  upxianuser  String?   @db.VarChar(50)
+  
   // 关联
-  lands        Land[]
-  inventory    Inventory[]
-  transactions Transaction[]
+  userlist    Userlist?
+  userbag     Userbag[]
+  userLogs    UserLog[]
+
+  @@map("think_user")
 }
 
-// ==================== 作物模块 ====================
-// 作物模板 - 定义所有可种植的作物
-model CropTemplate {
-  id              String   @id @default(cuid())
-  name            String                // 作物名称
-  icon            String                // 图标
-  seedPrice      Int                   // 种子价格
-  sellPrice      Int                   // 出售价格
-  growthTime     Int                   // 生长时间（秒）
-  expReward      Int      @default(10) // 收获经验奖励
-  description    String?               // 描述
-  stageCount     Int      @default(4)  // 生长阶段数
-  minLevel       Int      @default(1)  // 解锁等级
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
+// ==================== 用户游戏数据表 ====================
+model Userlist {
+  ID            Int       @id @default(autoincrement())
+  userid        Int       @unique
+  username      String?   @db.VarChar(50)
+  zhongzi       Int       @default(0)    // 种子数量
+  gold          String    @default("0")  @db.VarChar(10)  // 金币
+  rmb           String    @default("0")  @db.VarChar(10)  // 人民币
+  lvl           Int       @default(1)    // 等级
+  zs            String    @default("0")  @db.VarChar(10)  // 钻石
+  
+  // 12块土地状态 (-1=未开垦, 0=空地, 1-12=种植的作物ID)
+  zt1           String    @default("-1") @db.VarChar(11)
+  zt2           String    @default("-1") @db.VarChar(11)
+  zt3           String    @default("-1") @db.VarChar(10)
+  zt4           String    @default("-1") @db.VarChar(10)
+  zt5           String    @default("-1") @db.VarChar(10)
+  zt6           String    @default("-1") @db.VarChar(8)
+  zt7           String    @default("-1") @db.VarChar(10)
+  zt8           String    @default("-1") @db.VarChar(10)
+  zt9           String    @default("-1") @db.VarChar(10)
+  zt10          String    @default("-1") @db.VarChar(10)
+  zt11          String    @default("-1") @db.VarChar(10)
+  zt12          String    @default("-1") @db.VarChar(10)
+  
+  // 各块土地的开垦/种植时间
+  kttime1       DateTime? @db.DateTime
+  kttime2       DateTime? @db.DateTime
+  kttime3       DateTime? @db.DateTime
+  kttime4       DateTime? @db.DateTime
+  kttime5       DateTime? @db.DateTime
+  kttime6       DateTime? @db.DateTime
+  kttime7       DateTime? @db.DateTime
+  kttime8       DateTime? @db.DateTime
+  kttime9       DateTime? @db.DateTime
+  kttime10      DateTime? @db.DateTime
+  kttime11      DateTime? @db.DateTime
+  kttime12      DateTime? @db.DateTime
+  
+  // 各种作物的收获数量
+  hetao         String    @default("0") @db.VarChar(11)   // 核桃
+  hongzao       String    @default("0") @db.VarChar(11)   // 红枣
+  putao         String    @default("0") @db.VarChar(11)   // 葡萄
+  hamigua       String    @default("0") @db.VarChar(11)   // 哈密瓜
+  shamoguo      String    @default("0") @db.VarChar(11)   // 沙漠果
+  shiliu        String    @default("0") @db.VarChar(11)   // 石榴
+  xiangli       String    @default("0") @db.VarChar(11)   // 香梨
+  rensheuguo    String    @default("0") @db.VarChar(11)   // 人参果
+  
+  // 其他字段
+  logtime       DateTime? @db.DateTime
+  lognum        Int       @default(1)
+  islogin       String    @default("1") @db.VarChar(10)
+  sign          Int       @default(0)
+  sign_time     DateTime? @db.DateTime
+  jypwd         String?   @db.VarChar(11)  // 交易密码
+  
   // 关联
-  plantedCrops   PlantedCrop[]
+  user          User      @relation(fields: [userid], references: [id])
+
+  @@map("think_userlist")
 }
 
-// 土地 - 用户拥有的农场土地
-model Land {
-  id           String   @id @default(cuid())
-  userId       String
-  position     Int                   // 土地位置编号
-  isUnlocked   Boolean  @default(false) // 是否解锁
-  unlockPrice  Int      @default(1000)  // 解锁价格
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+// ==================== 作物列表 ====================
+model CropsList {
+  id                Int      @id @default(autoincrement())
+  crops_name        String?  @db.VarChar(255)   // 作物名称
+  crops_identifier  String?  @db.VarChar(255)   // 标识符
+  crops_land_count  Int?                        // 种植数量
+  crops_harvest     String?  @db.VarChar(255)   // 收获时间
+  crops_probability String?  @db.VarChar(255)   // 收获概率
+  crops_seed        String?  @db.VarChar(255)   // 种子价格
+  crops_sprout      String?  @db.VarChar(255)   // 发芽时间
+  crops_grow        String?  @db.VarChar(255)   // 生长时间
+  crops_open_price  String?  @db.VarChar(255)   // 开垦价格
+  name              String?  @db.VarChar(255)   // 英文名
 
-  // 关联
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plantedCrop  PlantedCrop?
-
-  @@unique([userId, position])
+  @@map("think_crops_list")
 }
 
-// 种植记录 - 记录每块土地上种植的作物
-model PlantedCrop {
-  id            String   @id @default(cuid())
-  landId        String   @unique  // 一块地只能种一种作物
-  cropId        String
-  plantedAt     DateTime @default(now()) // 种植时间
-  isHarvested   Boolean  @default(false) // 是否已收获
-  harvestedAt   DateTime?              // 收获时间
+// ==================== 用户背包 ====================
+model Userbag {
+  id        Int?      
+  name      String?   @db.VarChar(255)  // 物品名称
+  num       Int?                         // 数量
+  userid    Int?                         // 用户ID
+  username  String?   @db.VarChar(255)  // 用户名
+  buy_time  DateTime? @db.DateTime      // 购买时间
+  dq_time   DateTime? @db.DateTime      // 到期时间
 
-  // 关联
-  land          Land     @relation(fields: [landId], references: [id], onDelete: Cascade)
-  crop          CropTemplate @relation(fields: [cropId], references: [id])
-
-  // 作物状态通过时间计算，不存储
+  @@map("think_userbag")
 }
 
-// ==================== 商店模块 ====================
-// 商店商品
-model ShopItem {
-  id          String   @id @default(cuid())
-  name        String                // 商品名称
-  type        String                // 类型: seed, tool, decoration
-  itemId      String                // 关联物品ID（作物模板ID或道具ID）
-  price       Int                   // 价格
-  stock       Int      @default(-1) // 库存，-1表示无限
-  minLevel    Int      @default(1)  // 解锁等级
-  description String?               // 描述
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// ==================== 用户日志 ====================
+model UserLog {
+  id        Int       @id @default(autoincrement())
+  userid    Int
+  username  String?   @db.VarChar(50)
+  time      Int                     // 记录时间
+  record    String    @db.VarChar(255)  // 记录内容
+  score     Float     @default(0)       // 积分变动
+  source    Int       @default(0)       // 来源: 0任务 1邀请
+
+  @@map("think_user_log")
 }
 
-// ==================== 背包模块 ====================
-// 用户背包
-model Inventory {
-  id       String   @id @default(cuid())
-  userId   String
-  itemType String                // 类型: seed, crop, tool
-  itemId   String                // 物品ID
-  quantity Int      @default(1)  // 数量
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ==================== 商店商品 ====================
+model ShopCommodityList {
+  id            Int       @id @default(autoincrement())
+  name          String?   @db.VarChar(255)
+  classid       Int?
+  price         Int?
+  originalPrice Int?
+  inventory     Int?
+  sales         Int?
+  pic           String?   @db.VarChar(255)
+  status        Int       @default(1)
+  description   String?   @db.Text
+  sort          Int       @default(0)
+  createTime    DateTime  @default(now())
+  updateTime    DateTime  @updatedAt
 
-  // 关联
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, itemType, itemId])
+  @@map("think_shop_commodity_list")
 }
 
-// ==================== 交易模块 ====================
-// 交易记录
-model Transaction {
-  id          String   @id @default(cuid())
-  userId      String
-  type        String              // 类型: buy, sell, harvest, unlock
-  amount      Int                 // 金币变动（正为收入，负为支出）
-  description String              // 描述
-  createdAt   DateTime @default(now())
+// ==================== 管理员表 ====================
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(32)
+  loginip   String   @db.Char(15)
+  logintime Int
+  lock      Int      @default(0)
 
-  // 关联
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("think_admin")
 }
 
 // ==================== 系统配置 ====================
-model SystemConfig {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Sys {
+  id        Int      @id @default(autoincrement())
+  name      String?  @db.VarChar(255)
+  value     String?  @db.Text
+  createTime DateTime @default(now())
+
+  @@map("think_sys")
 }

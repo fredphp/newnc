@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { hashPassword, createSession } from '@/lib/auth';
+import { createSession, getCurrentUser } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,8 +21,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 检查用户是否已存在
-    const existingUser = await db.user.findUnique({
-      where: { username },
+    const existingUser = await db.user.findFirst({
+      where: { 
+        OR: [
+          { username: username },
+          { phone: username }
+        ]
+      },
     });
 
     if (existingUser) {
@@ -30,60 +35,62 @@ export async function POST(req: NextRequest) {
     }
 
     // 创建用户
-    const hashedPassword = hashPassword(password);
     const user = await db.user.create({
       data: {
         username,
-        password: hashedPassword,
+        password, // 原项目使用明文密码
         nickname: nickname || username,
-        coins: 1000,
-        exp: 0,
-        level: 1,
+        status: 1,
+        regtime: new Date(),
+        logtime: new Date(),
+        lognum: 1,
       },
     });
 
-    // 为新用户创建初始土地（6块，前3块解锁）
-    for (let i = 1; i <= 6; i++) {
-      await db.land.create({
-        data: {
-          userId: user.id,
-          position: i,
-          isUnlocked: i <= 3,
-          unlockPrice: i <= 3 ? 0 : 500 * (i - 2),
-        },
-      });
-    }
-
-    // 给新用户一些初始种子
-    const crops = await db.cropTemplate.findMany({
-      where: { minLevel: 1 },
-      take: 2,
+    // 创建用户游戏数据
+    await db.userlist.create({
+      data: {
+        userid: user.id!,
+        username: user.username,
+        zhongzi: 50,      // 初始种子
+        gold: '10000',    // 初始金币
+        rmb: '0',
+        lvl: 1,
+        zs: '0',
+        // 前3块土地已开垦（状态为0表示空地）
+        zt1: '0',
+        zt2: '0',
+        zt3: '0',
+        zt4: '-1',
+        zt5: '-1',
+        zt6: '-1',
+        zt7: '-1',
+        zt8: '-1',
+        zt9: '-1',
+        zt10: '-1',
+        zt11: '-1',
+        zt12: '-1',
+        // 作物库存
+        hetao: '0',
+        hongzao: '0',
+        putao: '0',
+        hamigua: '0',
+        shamoguo: '0',
+        shiliu: '0',
+        xiangli: '0',
+        rensheuguo: '0',
+      },
     });
 
-    for (const crop of crops) {
-      await db.inventory.create({
-        data: {
-          userId: user.id,
-          itemType: 'seed',
-          itemId: crop.id,
-          quantity: 3,
-        },
-      });
-    }
-
     // 创建会话
-    await createSession(user.id);
+    await createSession(user.id!);
+
+    // 获取完整用户信息
+    const fullUser = await getCurrentUser();
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        nickname: user.nickname,
-        coins: user.coins,
-        exp: user.exp,
-        level: user.level,
-      },
+      user: fullUser,
     });
   } catch (error) {
     console.error('注册错误:', error);

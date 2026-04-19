@@ -5,181 +5,106 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('开始填充种子数据...');
 
-  // 清理现有数据
-  await prisma.transaction.deleteMany();
-  await prisma.inventory.deleteMany();
-  await prisma.plantedCrop.deleteMany();
-  await prisma.land.deleteMany();
-  await prisma.shopItem.deleteMany();
-  await prisma.cropTemplate.deleteMany();
-  await prisma.user.deleteMany();
+  // 创建作物列表（12种作物）
+  const crops = [
+    { id: 1, crops_name: '核桃', crops_identifier: 'plantingApple', crops_harvest: '60', crops_probability: '10', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'hetao' },
+    { id: 2, crops_name: '石榴', crops_identifier: 'plantingRadish', crops_harvest: '60', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'shiliu' },
+    { id: 3, crops_name: '红枣', crops_identifier: 'plantingPepper', crops_harvest: '50', crops_probability: '15', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'hongzao' },
+    { id: 4, crops_name: '葡萄', crops_identifier: 'plantingWatermelon', crops_harvest: '50', crops_probability: '18', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'putao' },
+    { id: 5, crops_name: '哈密瓜', crops_identifier: 'plantingHamiMelon', crops_harvest: '40', crops_probability: '15', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'hamigua' },
+    { id: 6, crops_name: '香梨', crops_identifier: 'plantingFragrantPea', crops_harvest: '40', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'xiangli' },
+    { id: 7, crops_name: '沙漠果', crops_identifier: 'plantingDesertFruit', crops_harvest: '20', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'shamoguo' },
+    { id: 8, crops_name: '人参果', crops_identifier: 'plantingGinsengFruit', crops_harvest: '20', crops_probability: '15', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'rensheuguo' },
+    { id: 9, crops_name: '薰衣草', crops_identifier: 'plantinglavender', crops_harvest: '20', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'xunyichao' },
+    { id: 10, crops_name: '沙漠人参', crops_identifier: 'plantingginseng', crops_harvest: '15', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'shamorenshen' },
+    { id: 11, crops_name: '巴旦木', crops_identifier: 'plantingalmonds', crops_harvest: '7', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'badanmu' },
+    { id: 12, crops_name: '和田玉', crops_identifier: 'plantingHetianJade', crops_harvest: '1', crops_probability: '0', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'hetianyu' },
+  ];
 
-  // 创建作物模板
-  const crops = await Promise.all([
-    prisma.cropTemplate.create({
-      data: {
-        name: '胡萝卜',
-        icon: '🥕',
-        seedPrice: 50,
-        sellPrice: 100,
-        growthTime: 60, // 1分钟（演示用）
-        expReward: 10,
-        description: '新手作物，生长快速',
-        stageCount: 4,
-        minLevel: 1,
-      },
-    }),
-    prisma.cropTemplate.create({
-      data: {
-        name: '番茄',
-        icon: '🍅',
-        seedPrice: 100,
-        sellPrice: 200,
-        growthTime: 120, // 2分钟
-        expReward: 20,
-        description: '红色多汁的番茄',
-        stageCount: 4,
-        minLevel: 1,
-      },
-    }),
-    prisma.cropTemplate.create({
-      data: {
-        name: '玉米',
-        icon: '🌽',
-        seedPrice: 150,
-        sellPrice: 300,
-        growthTime: 180, // 3分钟
-        expReward: 30,
-        description: '金黄色的玉米棒',
-        stageCount: 4,
-        minLevel: 2,
-      },
-    }),
-    prisma.cropTemplate.create({
-      data: {
-        name: '西瓜',
-        icon: '🍉',
-        seedPrice: 200,
-        sellPrice: 450,
-        growthTime: 300, // 5分钟
-        expReward: 50,
-        description: '夏季解暑佳品',
-        stageCount: 4,
-        minLevel: 3,
-      },
-    }),
-    prisma.cropTemplate.create({
-      data: {
-        name: '草莓',
-        icon: '🍓',
-        seedPrice: 180,
-        sellPrice: 380,
-        growthTime: 240, // 4分钟
-        expReward: 40,
-        description: '香甜可口的草莓',
-        stageCount: 4,
-        minLevel: 2,
-      },
-    }),
-    prisma.cropTemplate.create({
-      data: {
-        name: '向日葵',
-        icon: '🌻',
-        seedPrice: 250,
-        sellPrice: 500,
-        growthTime: 360, // 6分钟
-        expReward: 60,
-        description: '向阳而生的美丽花朵',
-        stageCount: 4,
-        minLevel: 4,
-      },
-    }),
-    prisma.cropTemplate.create({
-      data: {
-        name: '南瓜',
-        icon: '🎃',
-        seedPrice: 300,
-        sellPrice: 600,
-        growthTime: 480, // 8分钟
-        expReward: 80,
-        description: '万圣节必备',
-        stageCount: 4,
-        minLevel: 5,
-      },
-    }),
-    prisma.cropTemplate.create({
-      data: {
-        name: '辣椒',
-        icon: '🌶️',
-        seedPrice: 120,
-        sellPrice: 250,
-        growthTime: 150, // 2.5分钟
-        expReward: 25,
-        description: '火辣辣的辣椒',
-        stageCount: 4,
-        minLevel: 2,
-      },
-    }),
-  ]);
-
-  console.log(`创建了 ${crops.length} 种作物`);
-
-  // 创建商店商品（种子）
-  const shopItems = await Promise.all(
-    crops.map((crop) =>
-      prisma.shopItem.create({
-        data: {
-          name: `${crop.name}种子`,
-          type: 'seed',
-          itemId: crop.id,
-          price: crop.seedPrice,
-          stock: -1, // 无限库存
-          minLevel: crop.minLevel,
-          description: `种植后可获得${crop.name}`,
-        },
-      })
-    )
-  );
-
-  console.log(`创建了 ${shopItems.length} 种商店商品`);
-
-  // 创建测试用户
-  const testUser = await prisma.user.create({
-    data: {
-      username: 'demo',
-      password: 'demo123', // 实际应用应该加密
-      nickname: '农场主',
-      coins: 1000,
-      exp: 0,
-      level: 1,
-    },
-  });
-
-  console.log(`创建了测试用户: ${testUser.username}`);
-
-  // 为用户创建初始土地（6块，前3块解锁）
-  for (let i = 1; i <= 6; i++) {
-    await prisma.land.create({
-      data: {
-        userId: testUser.id,
-        position: i,
-        isUnlocked: i <= 3, // 前3块默认解锁
-        unlockPrice: i <= 3 ? 0 : 500 * (i - 2), // 解锁价格递增
-      },
+  for (const crop of crops) {
+    await prisma.cropsList.upsert({
+      where: { id: crop.id },
+      update: crop,
+      create: crop,
     });
   }
+  console.log('创建了 12 种作物');
 
-  console.log('为用户创建了6块土地（前3块已解锁）');
-
-  // 给测试用户一些初始种子
-  await prisma.inventory.createMany({
-    data: [
-      { userId: testUser.id, itemType: 'seed', itemId: crops[0].id, quantity: 5 },
-      { userId: testUser.id, itemType: 'seed', itemId: crops[1].id, quantity: 3 },
-    ],
+  // 创建测试用户
+  const testUser = await prisma.user.upsert({
+    where: { id: 1001 },
+    update: {},
+    create: {
+      id: 1001,
+      username: 'demo',
+      password: 'demo123',
+      nickname: '测试用户',
+      phone: '13800138000',
+      status: 1,
+      regtime: new Date(),
+      logtime: new Date(),
+      lognum: 1,
+    },
   });
+  console.log('创建了测试用户: demo');
 
-  console.log('给测试用户添加了初始种子');
+  // 创建用户游戏数据
+  await prisma.userlist.upsert({
+    where: { userid: testUser.id },
+    update: {},
+    create: {
+      userid: testUser.id!,
+      username: 'demo',
+      zhongzi: 100,
+      gold: '10000',
+      rmb: '0',
+      lvl: 1,
+      zs: '0',
+      // 前3块土地已开垦
+      zt1: '0',
+      zt2: '0',
+      zt3: '0',
+      zt4: '-1',
+      zt5: '-1',
+      zt6: '-1',
+      zt7: '-1',
+      zt8: '-1',
+      zt9: '-1',
+      zt10: '-1',
+      zt11: '-1',
+      zt12: '-1',
+      // 作物数量
+      hetao: '0',
+      hongzao: '0',
+      putao: '0',
+      hamigua: '0',
+      shamoguo: '0',
+      shiliu: '0',
+      xiangli: '0',
+      rensheuguo: '0',
+    },
+  });
+  console.log('创建了用户游戏数据');
+
+  // 创建商店商品
+  const shopItems = [
+    { name: '核桃种子', classid: 1, price: 100, inventory: -1, status: 1 },
+    { name: '石榴种子', classid: 1, price: 100, inventory: -1, status: 1 },
+    { name: '红枣种子', classid: 1, price: 150, inventory: -1, status: 1 },
+    { name: '葡萄种子', classid: 1, price: 150, inventory: -1, status: 1 },
+    { name: '哈密瓜种子', classid: 1, price: 200, inventory: -1, status: 1 },
+    { name: '香梨种子', classid: 1, price: 200, inventory: -1, status: 1 },
+    { name: '沙漠果种子', classid: 1, price: 300, inventory: -1, status: 1 },
+    { name: '人参果种子', classid: 1, price: 500, inventory: -1, status: 1 },
+  ];
+
+  for (const item of shopItems) {
+    await prisma.shopCommodityList.create({
+      data: item,
+    });
+  }
+  console.log('创建了 8 种商店商品');
+
   console.log('种子数据填充完成！');
 }
 

@@ -1,45 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { hashPassword, createSession } from '@/lib/auth';
+import { createSession, getCurrentUser } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { username, password } = body;
+    const { username, password } = await req.json();
 
-    // 验证输入
     if (!username || !password) {
-      return NextResponse.json({ error: '用户名和密码不能为空' }, { status: 400 });
+      return NextResponse.json({ error: '请输入用户名和密码' }, { status: 400 });
     }
 
     // 查找用户
-    const user = await db.user.findUnique({
-      where: { username },
+    const user = await db.user.findFirst({
+      where: { 
+        OR: [
+          { username: username },
+          { phone: username }
+        ]
+      },
     });
 
     if (!user) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
 
-    // 验证密码
-    const hashedPassword = hashPassword(password);
-    if (user.password !== hashedPassword) {
+    // 验证密码（原项目使用明文密码比较）
+    if (user.password !== password) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
+
+    // 检查用户状态
+    if (user.status !== 1) {
+      return NextResponse.json({ error: '账号已被锁定' }, { status: 403 });
+    }
+
+    // 更新登录信息
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        logtime: new Date(),
+        lognum: (user.lognum || 0) + 1,
+        logip: req.headers.get('x-forwarded-for') || 'unknown',
+      },
+    });
 
     // 创建会话
     await createSession(user.id);
 
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        nickname: user.nickname,
-        coins: user.coins,
-        exp: user.exp,
-        level: user.level,
-      },
+    // 获取完整用户信息
+    const fullUser = await getCurrentUser();
+
+    return NextResponse.json({ 
+      success: true, 
+      user: fullUser 
     });
   } catch (error) {
     console.error('登录错误:', error);

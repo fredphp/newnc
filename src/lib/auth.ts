@@ -2,22 +2,8 @@ import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-// 简单的密码哈希（生产环境应使用 bcrypt）
-export function hashPassword(password: string): string {
-  // 简单哈希，仅用于演示
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16);
-}
-
-// 验证密码
-export function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash;
-}
+// 会话存储（生产环境应使用 Redis）
+const sessions = new Map<string, { userId: number; expiresAt: number }>();
 
 // 生成会话令牌
 export function generateToken(): string {
@@ -26,11 +12,8 @@ export function generateToken(): string {
     .join('');
 }
 
-// 会话存储（生产环境应使用 Redis）
-const sessions = new Map<string, { userId: string; expiresAt: number }>();
-
 // 创建会话
-export async function createSession(userId: string): Promise<string> {
+export async function createSession(userId: number): Promise<string> {
   const token = generateToken();
   const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24小时过期
   sessions.set(token, { userId, expiresAt });
@@ -46,7 +29,7 @@ export async function createSession(userId: string): Promise<string> {
 }
 
 // 获取当前用户
-export async function getCurrentUser(): Promise<{ id: string; username: string; nickname: string | null; coins: number; exp: number; level: number; avatar: string | null } | null> {
+export async function getCurrentUser() {
   const token = (await cookies()).get('session_token')?.value;
   if (!token) return null;
 
@@ -56,12 +39,56 @@ export async function getCurrentUser(): Promise<{ id: string; username: string; 
     return null;
   }
 
+  // 获取用户基本信息
   const user = await db.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, username: true, nickname: true, coins: true, exp: true, level: true, avatar: true },
   });
 
-  return user;
+  if (!user) return null;
+
+  // 获取用户游戏数据
+  const userlist = await db.userlist.findUnique({
+    where: { userid: session.userId },
+  });
+
+  return {
+    id: user.id,
+    username: user.username || '',
+    nickname: user.nickname || user.username || '',
+    phone: user.phone,
+    status: user.status || 1,
+    // 游戏数据
+    gameData: userlist ? {
+      zhongzi: userlist.zhongzi,
+      gold: userlist.gold,
+      rmb: userlist.rmb,
+      lvl: userlist.lvl,
+      zs: userlist.zs,
+      // 土地状态
+      lands: [
+        userlist.zt1, userlist.zt2, userlist.zt3, userlist.zt4,
+        userlist.zt5, userlist.zt6, userlist.zt7, userlist.zt8,
+        userlist.zt9, userlist.zt10, userlist.zt11, userlist.zt12
+      ],
+      // 土地种植时间
+      landTimes: [
+        userlist.kttime1, userlist.kttime2, userlist.kttime3, userlist.kttime4,
+        userlist.kttime5, userlist.kttime6, userlist.kttime7, userlist.kttime8,
+        userlist.kttime9, userlist.kttime10, userlist.kttime11, userlist.kttime12
+      ],
+      // 作物库存
+      crops: {
+        hetao: userlist.hetao,
+        hongzao: userlist.hongzao,
+        putao: userlist.putao,
+        hamigua: userlist.hamigua,
+        shamoguo: userlist.shamoguo,
+        shiliu: userlist.shiliu,
+        xiangli: userlist.xiangli,
+        rensheuguo: userlist.rensheuguo,
+      }
+    } : null
+  };
 }
 
 // 登出
