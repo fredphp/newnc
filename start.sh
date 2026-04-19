@@ -84,41 +84,40 @@ install_dependencies() {
 
 # 初始化数据库
 init_database() {
-    print_info "检查数据库..."
+    print_info "检查数据库配置..."
     
-    # 确保 db 目录存在
-    if [ ! -d "db" ]; then
-        print_info "创建数据库目录..."
-        mkdir -p db
-    fi
-    
-    if [ ! -f "db/custom.db" ]; then
-        print_info "正在初始化数据库..."
-        
-        # 先生成 Prisma Client
-        print_info "生成 Prisma Client..."
-        bun run db:generate
-        
-        # 推送数据库结构
-        bun run db:push
-        if [ $? -eq 0 ]; then
-            print_success "数据库初始化完成"
-            
-            # 检查是否需要运行种子数据
-            if [ -f "prisma/seed.ts" ]; then
-                print_info "正在填充种子数据..."
-                bun run prisma/seed.ts 2>/dev/null || true
-            fi
+    # 检查 MySQL 是否运行
+    print_info "检查 MySQL 服务..."
+    if command -v mysql &> /dev/null; then
+        # 尝试连接 MySQL（使用 .env 中的配置）
+        if mysqladmin ping -h localhost --silent 2>/dev/null; then
+            print_success "MySQL 服务运行中"
         else
-            print_error "数据库初始化失败"
-            return 1
+            print_warning "MySQL 服务可能未启动，请确保 MySQL 正在运行"
         fi
     else
-        print_success "数据库已存在"
+        print_warning "未检测到 MySQL 客户端"
+    fi
+    
+    # 生成 Prisma Client
+    print_info "生成 Prisma Client..."
+    bun run db:generate
+    
+    # 推送数据库结构
+    print_info "正在同步数据库结构..."
+    bun run db:push
+    if [ $? -eq 0 ]; then
+        print_success "数据库结构同步完成"
         
-        # 确保 Prisma Client 是最新的
-        print_info "检查 Prisma Client..."
-        bun run db:generate
+        # 检查是否需要运行种子数据
+        if [ -f "prisma/seed.ts" ]; then
+            print_info "正在填充种子数据..."
+            bun run prisma/seed.ts 2>/dev/null || true
+        fi
+    else
+        print_error "数据库同步失败，请检查 MySQL 连接配置"
+        print_info "请确认 .env 文件中的 DATABASE_URL 配置正确"
+        return 1
     fi
 }
 
