@@ -16,13 +16,13 @@ async function getCurrentUserId(request: NextRequest): Promise<number | null> {
 
 // 默认签到奖励配置 - 只有金币
 const DEFAULT_SIGN_REWARDS = [
-  { day: 1, gold: 100 },
-  { day: 2, gold: 120 },
-  { day: 3, gold: 140 },
-  { day: 4, gold: 160 },
-  { day: 5, gold: 180 },
-  { day: 6, gold: 200 },
-  { day: 7, gold: 300 },
+  { day: 1, gold: 100, diamond: 0 },
+  { day: 2, gold: 120, diamond: 0 },
+  { day: 3, gold: 140, diamond: 0 },
+  { day: 4, gold: 160, diamond: 0 },
+  { day: 5, gold: 180, diamond: 0 },
+  { day: 6, gold: 200, diamond: 0 },
+  { day: 7, gold: 300, diamond: 0 },
 ];
 
 // 获取签到奖励配置
@@ -185,6 +185,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const userId = await getCurrentUserId(request);
+    console.log('签到POST - 用户ID:', userId);
+    
     if (!userId) {
       return NextResponse.json({ success: false, message: '请先登录' }, { status: 401 });
     }
@@ -195,12 +197,15 @@ export async function POST(request: NextRequest) {
       include: { userlist: true },
     });
 
+    console.log('签到POST - 用户数据:', { hasUser: !!user, hasUserlist: !!user?.userlist });
+
     if (!user || !user.userlist) {
       return NextResponse.json({ success: false, message: '用户数据不存在' }, { status: 404 });
     }
 
     // 获取签到奖励配置
     const SIGN_REWARDS = await getSignRewards();
+    console.log('签到POST - 奖励配置:', SIGN_REWARDS);
 
     const userlist = user.userlist;
     const now = new Date();
@@ -244,44 +249,62 @@ export async function POST(request: NextRequest) {
     // 计算奖励（第7天后循环）
     const rewardDay = ((continuousDays - 1) % 7) + 1;
     const reward = SIGN_REWARDS.find((r: any) => r.day === rewardDay) || SIGN_REWARDS[0];
+    
+    // 确保 reward 有 gold 和 diamond 字段
+    const goldReward = reward.gold || 100;
+    const diamondReward = reward.diamond || 0;
+    
+    console.log('签到POST - 计算奖励:', { continuousDays, rewardDay, goldReward, diamondReward });
 
     // 更新用户数据
     const currentGold = parseInt(userlist.gold || '0');
     const currentDiamond = parseInt(userlist.zs || '0');
+    const newGold = currentGold + goldReward;
+    const newDiamond = currentDiamond + diamondReward;
+    
+    console.log('签到POST - 更新数据:', { currentGold, newGold, currentDiamond, newDiamond });
     
     await db.userlist.update({
       where: { id: userlist.id },
       data: {
         sign: continuousDays,
         sign_time: now,
-        gold: String(currentGold + reward.gold),
-        zs: String(currentDiamond + reward.diamond),
+        gold: String(newGold),
+        zs: String(newDiamond),
       },
     });
 
     // 记录签到日志
-    await db.signRecord.create({
-      data: {
-        userid: userId,
-        username: user.username,
-        time: now,
-        type: 1,
-      },
-    });
+    try {
+      await db.signRecord.create({
+        data: {
+          userid: userId,
+          username: user.username,
+          time: now,
+          type: 1,
+        },
+      });
+    } catch (e) {
+      console.error('记录签到日志失败:', e);
+    }
 
     // 同时记录到用户日志
-    await db.userLog.create({
-      data: {
-        userid: userId,
-        username: user.username,
-        time: Math.floor(Date.now() / 1000),
-        record: `签到成功，获得${reward.gold}金币${reward.diamond > 0 ? `和${reward.diamond}钻石` : ''}`,
-        score: reward.gold,
-        source: 0,
-      },
-    });
+    try {
+      await db.userLog.create({
+        data: {
+          userid: userId,
+          username: user.username,
+          time: Math.floor(Date.now() / 1000),
+          record: `签到成功，获得${goldReward}金币`,
+          score: goldReward,
+          source: 0,
+        },
+      });
+    } catch (e) {
+      console.error('记录用户日志失败:', e);
+    }
 
-    console.log(`用户 ${user.username} 签到成功，连续 ${continuousDays} 天，获得 ${reward.gold} 金币，${reward.diamond} 钻石`);
+    console.log(`用户 ${user.username} 签到成功，连续 ${continuousDays} 天，获得 ${goldReward} 金币`);
 
     return NextResponse.json({
       success: true,
@@ -289,10 +312,10 @@ export async function POST(request: NextRequest) {
       data: {
         continuousDays,
         rewardDay,
-        gold: reward.gold,
-        diamond: reward.diamond,
-        totalGold: currentGold + reward.gold,
-        totalDiamond: currentDiamond + reward.diamond,
+        gold: goldReward,
+        diamond: diamondReward,
+        totalGold: newGold,
+        totalDiamond: newDiamond,
       },
     });
 
@@ -300,7 +323,7 @@ export async function POST(request: NextRequest) {
     console.error('签到失败:', error);
     return NextResponse.json({ 
       success: false, 
-      message: '签到失败，请重试' 
+      message: '签到失败: ' + (error instanceof Error ? error.message : '未知错误')
     }, { status: 500 });
   }
 }
