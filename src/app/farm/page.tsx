@@ -22,6 +22,8 @@ interface UserlistData {
   xiangli: string;
   shamoguo: string;
   rensheuguo: string;
+  muban: string;
+  shitou: string;
   tudi1: number; tudi2: number; tudi3: number; tudi4: number;
   tudi5: number; tudi6: number; tudi7: number; tudi8: number;
   tudi9: number; tudi10: number; tudi11: number; tudi12: number;
@@ -42,12 +44,24 @@ interface UserData {
   userlist: UserlistData | null;
 }
 
+// 土地等级配置
+const LAND_LEVELS = [
+  { level: 1, name: '戈壁滩', img: '593f8d21643ec.png', output: '核桃 + 石榴 + 红枣 + 葡萄' },
+  { level: 2, name: '盐碱地', img: '593f8d21643ec.png', output: '核桃 + 石榴 + 红枣 + 葡萄' },
+  { level: 3, name: '胶泥地', img: '593f8dd6dbb6f.png', output: '核桃 + 石榴 + 红枣 + 葡萄 + 哈密瓜 + 香梨' },
+  { level: 4, name: '金沙地', img: '593f8df0db170.png', output: '全部作物' },
+];
+
 export default function FarmPage() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeLand, setActiveLand] = useState<number | null>(null);
   const [showModal, setShowModal] = useState<string | null>(null);
+  const [jiansheTab, setJiansheTab] = useState(0); // 0: 房屋升级, 1: 土地升级
+  const [selectedLandLevel, setSelectedLandLevel] = useState<number | null>(null); // 选中的土地等级
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
   // 设置 rem 单位和引入 CSS
   useEffect(() => {
@@ -101,12 +115,6 @@ export default function FarmPage() {
       
       setUser(data);
       console.log('用户数据:', data);
-      console.log('土地数据:', {
-        tudi1: data.userlist?.tudi1,
-        tudi2: data.userlist?.tudi2,
-        tudi3: data.userlist?.tudi3,
-        fangwu: data.userlist?.fangwu,
-      });
     } catch (error) {
       console.error('获取用户数据失败:', error);
       router.push('/');
@@ -118,16 +126,13 @@ export default function FarmPage() {
   const createDefaultUserlist = (): UserlistData => {
     const data: any = {
       gold: '1000', zs: '10', rmb: '0', lvl: 1, zhongzi: 5, fangwu: 1,
-      bg1: 1, bg2: 0, bg3: 0,  // 默认解锁背景1
+      bg1: 1, bg2: 0, bg3: 0,
       hetao: '0', shiliu: '0', hongzao: '0', putao: '0',
       hamigua: '0', xiangli: '0', shamoguo: '0', rensheuguo: '0',
+      muban: '0', shitou: '0',
     };
-    // 初始化12块土地状态
-    // tudi: 土地等级（1=戈壁滩, 2=盐碱地, 3=胶泥地, 4=金沙地）
-    // 默认所有已开垦土地都是等级1（戈壁滩）
-    // zt: -1=未开垦, 0=空地可播种, 1=已播种, 2=枯萎
     for (let i = 1; i <= 12; i++) {
-      data[`tudi${i}`] = i === 1 ? 1 : 0;  // 第一块土地等级1，其他未开垦
+      data[`tudi${i}`] = i === 1 ? 1 : 0;
       data[`zt${i}`] = i === 1 ? '0' : '-1';
       data[`kttime${i}`] = null;
     }
@@ -140,12 +145,111 @@ export default function FarmPage() {
   };
 
   const handleLandClick = (index: number) => {
+    const tudi = user?.userlist?.[`tudi${index}`];
+    const zt = user?.userlist?.[`zt${index}`];
+    
+    // 未开垦的土地（tudi = 0 或 zt = -1）
+    if (tudi === 0 || zt === '-1') {
+      setSelectedLandLevel(1); // 默认选中第一级土地升级
+      setJiansheTab(1); // 切换到土地升级tab
+      setShowModal('jianshe');
+      return;
+    }
+    
+    // 已开垦的土地，切换操作按钮
     setActiveLand(activeLand === index ? null : index);
+  };
+
+  const handleBigHouseClick = () => {
+    setJiansheTab(0); // 默认显示房屋升级tab
+    setShowModal('jianshe');
   };
 
   // 获取房屋等级
   const getFangwu = () => {
     return user?.userlist?.fangwu || 1;
+  };
+
+  // 计算升级房屋所需材料
+  const getHouseUpgradeCost = () => {
+    const lvl = getFangwu();
+    return {
+      muban: lvl * 30,
+      shitou: lvl * 30,
+      zs: lvl * 10,
+    };
+  };
+
+  // 显示提示消息
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 2000);
+  };
+
+  // 房屋升级
+  const handleHouseUpgrade = async () => {
+    const cost = getHouseUpgradeCost();
+    const muban = parseInt(user?.userlist?.muban || '0');
+    const shitou = parseInt(user?.userlist?.shitou || '0');
+    const zs = parseInt(user?.userlist?.zs || '0');
+    
+    if (muban < cost.muban || shitou < cost.shitou || zs < cost.zs) {
+      showToast('材料不足，无法升级！', 'error');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/farm/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'house' }),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        showToast('房屋升级成功！');
+        fetchUserData();
+        setTimeout(() => setShowModal(null), 1500);
+      } else {
+        showToast(data.message || '升级失败', 'error');
+      }
+    } catch (error) {
+      showToast('升级失败，请重试', 'error');
+    }
+  };
+
+  // 土地升级
+  const handleLandUpgrade = async (landLevel: number) => {
+    try {
+      const res = await fetch('/api/farm/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'land', level: landLevel }),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        showToast('土地升级成功！');
+        fetchUserData();
+        setTimeout(() => setShowModal(null), 1500);
+      } else {
+        showToast(data.message || '升级失败', 'error');
+      }
+    } catch (error) {
+      showToast('升级失败，请重试', 'error');
+    }
+  };
+
+  // 获取下一个需要开垦的土地编号
+  const getNextLandToUnlock = () => {
+    for (let i = 1; i <= 12; i++) {
+      const tudi = user?.userlist?.[`tudi${i}`];
+      if (tudi === 0) return i;
+    }
+    return null;
   };
 
   if (loading) {
@@ -156,9 +260,12 @@ export default function FarmPage() {
     );
   }
 
+  const houseCost = getHouseUpgradeCost();
+  const nextLandToUnlock = getNextLandToUnlock();
+
   return (
     <>
-      {/* 整体背景图 - 根据用户解锁的背景显示 */}
+      {/* 整体背景图 */}
       <div 
         className="farm-background"
         style={{
@@ -184,23 +291,25 @@ export default function FarmPage() {
       <div className="sicoZhezhao"></div>
       <div id="mengban" style={{ display: 'none' }}></div>
       
-      {/* 大房子 - 根据房屋等级显示不同图片 */}
+      {/* 大房子 - 点击显示升级弹窗 */}
       <div 
         className="BigHouse animated" 
         style={{ 
           background: `url(/images/house_list/${getFangwu()}.png)`,
-          backgroundSize: 'cover'
+          backgroundSize: 'cover',
+          cursor: 'pointer',
         }}
+        onClick={handleBigHouseClick}
       ></div>
       {/* 小房子 */}
-      <div className="SmallHouse animated"></div>
+      <div className="SmallHouse animated" style={{ cursor: 'pointer' }} onClick={() => setShowModal('chongwu')}></div>
 
       {/* 页面左下角按钮 */}
       <div className="footerLeft">
         <div className="leftBtn1" onClick={() => setShowModal('cangku')}></div>
         <div className="leftBtn2" onClick={() => setShowModal('duihuan')}></div>
         <div className="leftBtn3" onClick={() => setShowModal('shangdian')}></div>
-        <div className="leftBtn4" onClick={() => setShowModal('jianshe')}></div>
+        <div className="leftBtn4" onClick={() => { setJiansheTab(0); setShowModal('jianshe'); }}></div>
       </div>
       <div id="footerLeftBtn" onClick={() => setShowModal('geren')}></div>
 
@@ -226,7 +335,7 @@ export default function FarmPage() {
       </div>
 
       {/* 签到 */}
-      <div className="qiandao animated pulse infinite" onClick={() => setShowModal('qiandao')}></div>
+      <div className="qiandao animated pulse infinite" onClick={() => showToast('签到成功！获得100金币')}></div>
 
       {/* 右上角信息 */}
       <div className="rightTop">
@@ -240,19 +349,14 @@ export default function FarmPage() {
       <div className="easteBox">
         <ul className="easte">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => {
-            // tudi 字段存储土地等级（0=未开垦, 1-4=地块等级）
-            // 等级1=戈壁滩, 等级2=盐碱地, 等级3=胶泥地, 等级4=金沙地
             const tudi = user?.userlist?.[`tudi${i}`];
             const zt = user?.userlist?.[`zt${i}`];
             const isActive = activeLand === i;
             
-            // 根据土地等级和状态决定显示哪个图片
-            // tudi = 0: 未开垦（灰色土地 tudi0.png）
-            // tudi = 1-4: 已开垦，显示对应等级的土地图片
+            // 根据土地等级显示对应图片
             const tudiImage = tudi || 0;
-            
-            // 根据种植状态决定是否显示操作按钮
-            const canOperate = zt !== '-1';  // 已开垦的土地才能操作
+            const canOperate = zt !== '-1' && tudi > 0;
+            const isUnlocked = tudi > 0;
             
             return (
               <li 
@@ -261,25 +365,29 @@ export default function FarmPage() {
                   background: `url(/images/tudi/tudi${tudiImage}.png)`, 
                   backgroundSize: 'cover' 
                 }}
-                onClick={() => canOperate && handleLandClick(i)}
+                onClick={() => handleLandClick(i)}
               >
                 <div className="opacity"></div>
-                <img style={{ opacity: 0 }} className="zuowu" alt="" />
-                <img src="/picture/chongzi.png" style={{ display: 'none' }} className="chongzi" alt="" />
-                <img src="/picture/water.png" style={{ display: 'none' }} className="water" alt="" />
-                <img src="/picture/zacao.png" style={{ display: 'none' }} className="zacao" alt="" />
-                
-                {isActive && canOperate && (
+                {isUnlocked && (
                   <>
-                    <img src="/picture/bozhong.png" className="caozuoBtn animated bozhongBtn" alt="播种" />
-                    <img src="/picture/chanchu.png" className="caozuoBtn animated chanchuBtn" alt="铲除" />
-                    <img src="/picture/jiaoshui.png" className="caozuoBtn animated jiaoshuiBtn" alt="浇水" />
-                    <img src="/picture/shifei.png" className="caozuoBtn animated shifeiBtn" alt="施肥" />
-                    <img src="/picture/shouge.png" className="caozuoBtn animated shougeBtn" alt="收割" />
-                    <img src="/picture/xinxi.png" className="caozuoBtn animated xinxiBtn" alt="信息" />
-                    <img src="/picture/qingli.png" className="caozuoBtn animated qingliBtn" alt="清理" />
-                    <img src="/picture/chucao.png" className="caozuoBtn animated chucaoBtn" alt="除草" />
-                    <img src="/picture/chuchong.png" className="caozuoBtn animated chuchongBtn" alt="除虫" />
+                    <img style={{ opacity: 0 }} className="zuowu" alt="" />
+                    <img src="/picture/chongzi.png" style={{ display: 'none' }} className="chongzi" alt="" />
+                    <img src="/picture/water.png" style={{ display: 'none' }} className="water" alt="" />
+                    <img src="/picture/zacao.png" style={{ display: 'none' }} className="zacao" alt="" />
+                    
+                    {isActive && canOperate && (
+                      <>
+                        <img src="/picture/bozhong.png" className="caozuoBtn animated bozhongBtn" alt="播种" />
+                        <img src="/picture/chanchu.png" className="caozuoBtn animated chanchuBtn" alt="铲除" />
+                        <img src="/picture/jiaoshui.png" className="caozuoBtn animated jiaoshuiBtn" alt="浇水" />
+                        <img src="/picture/shifei.png" className="caozuoBtn animated shifeiBtn" alt="施肥" />
+                        <img src="/picture/shouge.png" className="caozuoBtn animated shougeBtn" alt="收割" />
+                        <img src="/picture/xinxi.png" className="caozuoBtn animated xinxiBtn" alt="信息" />
+                        <img src="/picture/qingli.png" className="caozuoBtn animated qingliBtn" alt="清理" />
+                        <img src="/picture/chucao.png" className="caozuoBtn animated chucaoBtn" alt="除草" />
+                        <img src="/picture/chuchong.png" className="caozuoBtn animated chuchongBtn" alt="除虫" />
+                      </>
+                    )}
                   </>
                 )}
                 <input type="hidden" value={i} />
@@ -325,6 +433,135 @@ export default function FarmPage() {
 
       {/* 遮罩 */}
       <div className="shade" style={{ display: showModal ? 'block' : 'none' }} onClick={() => setShowModal(null)}></div>
+
+      {/* 提示消息 */}
+      {toastMessage && (
+        <div 
+          className={`duihuan_${toastType === 'success' ? 'chenggong' : 'shibai'} animated`}
+          style={{ display: 'block' }}
+        >
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* 建设/升级弹窗 - 房屋升级和土地升级 */}
+      {showModal === 'jianshe' && (
+        <div className="jiansheBox animated" style={{ display: 'block' }}>
+          <div className="remove animated" onClick={(e) => { e.stopPropagation(); setShowModal(null); }}></div>
+          
+          {/* Tab切换按钮 */}
+          <ul className="jiansheTop">
+            <li className="animated" onClick={(e) => { e.stopPropagation(); setJiansheTab(0); }}>
+              <img src="/picture/fangwushengji.png" alt="房屋升级" style={{ display: jiansheTab === 0 ? 'none' : 'block' }} />
+              <img src="/picture/fangwushengji2.png" alt="房屋升级" style={{ display: jiansheTab === 0 ? 'block' : 'none' }} />
+            </li>
+            <li className="animated" onClick={(e) => { e.stopPropagation(); setJiansheTab(1); }}>
+              <img src="/picture/tdsj.png" alt="土地升级" style={{ display: jiansheTab === 1 ? 'none' : 'block' }} />
+              <img src="/picture/tdsj2.png" alt="土地升级" style={{ display: jiansheTab === 1 ? 'block' : 'none' }} />
+            </li>
+          </ul>
+          
+          <ul className="jiansheBot">
+            {/* 房屋升级 Tab */}
+            <li className="houseInfo" style={{ display: jiansheTab === 0 ? 'block' : 'none' }}>
+              <div className="gongyongList houseLevel">
+                <div className="dhImgLeft" style={{ background: 'url(/images/fangzi.png)', backgroundSize: 'cover' }}>
+                  <div className="diaoxiangBox" style={{ left: '1rem', top: '-0.2rem', color: '#512905' }}>
+                    <p style={{ fontWeight: 'bold', fontSize: '0.3rem', color: '#512905', textAlign: 'center', margin: '0.1rem 0rem' }}>房屋</p>
+                    <p style={{ fontSize: '0.2rem', color: '#512905' }}>房屋等级每提升1级, 将获得1块新土地</p>
+                  </div>
+                </div>
+                <div className="tudiName">
+                  <img src="/picture/gebitan.png" alt="" />
+                  <p style={{ textAlign: 'center', width: '1.57rem' }}>{getFangwu() + 1}级房屋</p>
+                </div>
+                
+                {/* 升级按钮 */}
+                <div 
+                  className="tudishengji animated" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => { e.stopPropagation(); handleHouseUpgrade(); }}
+                ></div>
+                
+                {/* 材料需求 */}
+                <div className="shuiguo1 fT">
+                  <img src="/images/593f8c9c2b7e3.png" alt="木板" />
+                  <span className="muban">{user?.userlist?.muban || '0'}</span>
+                  <div className="shuoguoNum">{houseCost.muban}</div>
+                </div>
+                
+                <div className="shuiguoJiaJia sTUpLevelJiafu">+</div>
+                
+                <div className="shuiguo1 sT" style={{ left: '2.2rem' }}>
+                  <img src="/images/593f86206e8d9.png" alt="石头" />
+                  <span className="shitou">{user?.userlist?.shitou || '0'}</span>
+                  <div className="shuoguoNum">{houseCost.shitou}</div>
+                </div>
+                
+                <div className="shuiguoJiaJia tTUpLevelJiafu" style={{ left: '2.75rem' }}>+</div>
+                
+                <div className="shuiguo1 tT" style={{ left: '3rem' }}>
+                  <img src="/images/03.png" alt="钻石" />
+                  <span className="zs">{user?.userlist?.zs || '0'}</span>
+                  <div className="shuoguoNum">{houseCost.zs}</div>
+                </div>
+              </div>
+            </li>
+            
+            {/* 土地升级 Tab */}
+            <li style={{ display: jiansheTab === 1 ? 'block' : 'none', overflowY: 'auto', height: '5.14rem' }}>
+              {LAND_LEVELS.map((land, index) => {
+                const costMultiplier = (user?.userlist?.lvl || 1) * 100;
+                return (
+                  <div key={land.level} className="gongyongList">
+                    <div 
+                      className="dhImgLeft" 
+                      style={{ background: `url(/images/${land.img})`, backgroundSize: 'cover' }}
+                    >
+                      <div className="diaoxiangBox" style={{ left: '1rem', top: '-0.2rem', color: '#512905' }}>
+                        <p style={{ fontWeight: 'bold', fontSize: '0.3rem', color: '#512905', textAlign: 'center', margin: '0.1rem 0rem' }}>{land.name}</p>
+                        <p style={{ fontSize: '0.18rem', color: '#512905' }}>产出：{land.output}</p>
+                      </div>
+                    </div>
+                    <div className="tudiName">
+                      <img src="/picture/gebitan.png" alt="" />
+                      <p style={{ textAlign: 'center', width: '1.57rem' }}>{land.name}</p>
+                    </div>
+                    
+                    <div 
+                      className="tudishengji animated"
+                      style={{ cursor: 'pointer' }}
+                      onClick={(e) => { e.stopPropagation(); handleLandUpgrade(land.level); }}
+                    ></div>
+                    
+                    <div className="shuiguo1">
+                      <img src="/picture/593f4c4de30b1.png" alt="石榴" />
+                      <span className="shiliu">{user?.userlist?.shiliu || '0'}</span>
+                      <div className="shuoguoNum">{costMultiplier}</div>
+                    </div>
+                    
+                    <div className="shuiguoJiaJia">+</div>
+                    
+                    <div className="shuiguo1" style={{ left: '2.2rem' }}>
+                      <img src="/picture/593f499ba27ce.png" alt="核桃" />
+                      <span className="hetao">{user?.userlist?.hetao || '0'}</span>
+                      <div className="shuoguoNum">{costMultiplier}</div>
+                    </div>
+                    
+                    <div className="shuiguoJiaJia" style={{ left: '2.75rem' }}>+</div>
+                    
+                    <div className="shuiguo1" style={{ left: '3rem' }}>
+                      <img src="/images/03.png" alt="钻石" />
+                      <span className="zs">{user?.userlist?.zs || '0'}</span>
+                      <div className="shuoguoNum">{costMultiplier}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </li>
+          </ul>
+        </div>
+      )}
 
       {/* 充值弹窗 */}
       {showModal === 'chongzhi' && (
@@ -514,7 +751,7 @@ export default function FarmPage() {
                   <div className="shuoguoNum">100</div>
                 </div>
                 <div className="shuiguoCount">1</div>
-                <div className="shuiguoduihuan animated"></div>
+                <div className="shuiguoduihuan animated" onClick={() => showToast('兑换成功！')}></div>
               </div>
             </li>
           </ul>

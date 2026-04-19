@@ -1238,3 +1238,131 @@ html, body {
   top: 0.3rem;
   left: 0.1rem;
 }
+
+/* 建设弹窗 - 房屋升级和土地升级 */
+.jiansheBox {
+  width: 6.61rem;
+  height: 7.04rem;
+  background: url(/images/fangwu_sj.png);
+  background-size: cover;
+}
+
+.jiansheTop {
+  position: absolute;
+  left: 0.5rem;
+  top: 1.12rem;
+}
+
+.jiansheTop li {
+  width: 1.46rem;
+  height: 0.63rem;
+  float: left;
+  margin-left: 0.05rem;
+  position: relative;
+  cursor: pointer;
+}
+
+.jiansheTop li img {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.jiansheBot {
+  position: absolute;
+  left: 0.18rem;
+  top: 1.63rem;
+}
+
+.jiansheBot li {
+  width: 6.23rem;
+  height: 5.14rem;
+  background: #f5e6c8;
+  background-size: cover;
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow-y: auto;
+  border-radius: 0.2rem;
+}
+
+.jiansheBot li.houseInfo {
+  background: #f5e6c8;
+}
+
+.tudiName {
+  width: 1.57rem;
+  position: absolute;
+  left: 1.4rem;
+  top: 0.2rem;
+  text-align: center;
+}
+
+.tudiName img {
+  width: 100%;
+}
+
+.tudiName p {
+  font-size: 0.2rem;
+  color: #75400c;
+  font-weight: bold;
+  margin-top: 0.05rem;
+}
+
+.tudishengji {
+  width: 1.13rem;
+  height: 0.54rem;
+  background: url(/images/shengji.png);
+  background-size: cover;
+  position: absolute;
+  left: 3.98rem;
+  top: 0.22rem;
+}
+
+.houseLevel .dhImgLeft p {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  bottom: 0;
+  left: 0;
+}
+
+/* 提示消息弹窗 */
+.duihuan_chenggong,
+.duihuan_shibai {
+  width: 3rem;
+  height: 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 0.2rem;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  z-index: 999;
+  display: none;
+}
+
+.duihuan_chenggong span,
+.duihuan_shibai span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.3rem;
+  font-weight: bold;
+}
+
+.duihuan_shibai span {
+  color: #ff6b6b;
+}
+
+.duihuan_chenggong span {
+  color: #4ade80;
+}
