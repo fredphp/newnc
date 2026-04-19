@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # ==========================================
-# 开心农场 - 环境检测与一键部署脚本
-# Happy Farm - Environment Detection & Deployment Script
+# 开心农场 - 环境检测与部署脚本
+# Happy Farm - Environment Detection & Deployment
 # ==========================================
 
 # 颜色定义
@@ -19,7 +19,6 @@ NC='\033[0m' # No Color
 OS_TYPE=""
 OS_VERSION=""
 ARCH_TYPE=""
-GO_VERSION_REQUIRED="1.21"
 NODE_VERSION_REQUIRED="18"
 BUN_VERSION_REQUIRED="1"
 
@@ -104,22 +103,12 @@ detect_os() {
 detect_dev_tools() {
     print_section "检测开发环境"
     
-    # Go 环境
-    print_info "Go 语言环境"
-    if command -v go &> /dev/null; then
-        GO_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
-        print_success "Go 已安装 (版本: $GO_VERSION)"
-        print_item "GOROOT: $(go env GOROOT 2>/dev/null || echo '未设置')"
-        print_item "GOPATH: $(go env GOPATH 2>/dev/null || echo '未设置')"
-    else
-        print_warning "Go 未安装"
-    fi
-    
     # Node.js 环境
     print_info "Node.js 环境"
     if command -v node &> /dev/null; then
         NODE_VERSION=$(node --version)
         print_success "Node.js 已安装 (版本: $NODE_VERSION)"
+        print_item "npm 版本: $(npm --version 2>/dev/null || echo '未安装')"
     else
         print_warning "Node.js 未安装"
     fi
@@ -133,15 +122,6 @@ detect_dev_tools() {
         print_warning "Bun 未安装"
     fi
     
-    # pnpm
-    print_info "pnpm 包管理器"
-    if command -v pnpm &> /dev/null; then
-        PNPM_VERSION=$(pnpm --version)
-        print_success "pnpm 已安装 (版本: $PNPM_VERSION)"
-    else
-        print_warning "pnpm 未安装"
-    fi
-    
     # Git
     print_info "Git 版本控制"
     if command -v git &> /dev/null; then
@@ -151,43 +131,39 @@ detect_dev_tools() {
         print_warning "Git 未安装"
     fi
     
-    # Docker
-    print_info "Docker 容器"
-    if command -v docker &> /dev/null; then
-        DOCKER_VERSION=$(docker --version | awk '{print $3}' | tr -d ',')
-        print_success "Docker 已安装 (版本: $DOCKER_VERSION)"
-    else
-        print_warning "Docker 未安装"
-    fi
-    
     # MySQL
     print_info "MySQL 数据库"
     if command -v mysql &> /dev/null; then
         MYSQL_VERSION=$(mysql --version | awk '{print $3}' | tr -d ',')
         print_success "MySQL 已安装 (版本: $MYSQL_VERSION)"
+        
+        # 检查 MySQL 服务状态
+        if mysqladmin ping -h localhost --silent 2>/dev/null; then
+            print_item "MySQL 服务: 运行中 ✓"
+        else
+            print_item "MySQL 服务: 未运行"
+        fi
     else
         print_warning "MySQL 未安装"
     fi
     
-    # Redis
-    print_info "Redis 缓存"
+    # Redis (可选)
+    print_info "Redis 缓存 (可选)"
     if command -v redis-server &> /dev/null; then
         REDIS_VERSION=$(redis-server --version | awk '{print $3}' | cut -d'=' -f2)
         print_success "Redis 已安装 (版本: $REDIS_VERSION)"
     else
-        print_warning "Redis 未安装"
+        print_skip "Redis 未安装 (项目不依赖)"
     fi
-}
-
-# 检查 Go 是否已安装
-check_go_installed() {
-    if command -v go &> /dev/null; then
-        return 0
+    
+    # Docker (可选)
+    print_info "Docker 容器 (可选)"
+    if command -v docker &> /dev/null; then
+        DOCKER_VERSION=$(docker --version | awk '{print $3}' | tr -d ',')
+        print_success "Docker 已安装 (版本: $DOCKER_VERSION)"
+    else
+        print_skip "Docker 未安装"
     fi
-    if [ -f /usr/local/go/bin/go ]; then
-        return 0
-    fi
-    return 1
 }
 
 # 检查 Node.js 是否已安装
@@ -205,268 +181,6 @@ check_mysql_installed() {
     command -v mysql &> /dev/null
 }
 
-# 检查 Redis 是否已安装
-check_redis_installed() {
-    command -v redis-server &> /dev/null
-}
-
-# 检查 Go 工具是否已安装
-check_go_tool_installed() {
-    local tool_name=$1
-    local GO_CMD="go"
-    
-    if [ -f /usr/local/go/bin/go ]; then
-        GO_CMD="/usr/local/go/bin/go"
-    fi
-    
-    # 检查 GOPATH/bin 下是否存在该工具
-    local GOPATH=$($GO_CMD env GOPATH 2>/dev/null)
-    if [ -n "$GOPATH" ] && [ -f "$GOPATH/bin/$tool_name" ]; then
-        return 0
-    fi
-    
-    # 检查是否在 PATH 中
-    command -v "$tool_name" &> /dev/null
-}
-
-# 安装 Go 环境
-install_go() {
-    print_section "安装 Go 语言环境"
-    
-    # 检查是否已安装
-    if check_go_installed; then
-        local CURRENT_VERSION=""
-        if command -v go &> /dev/null; then
-            CURRENT_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
-        elif [ -f /usr/local/go/bin/go ]; then
-            CURRENT_VERSION=$(/usr/local/go/bin/go version | awk '{print $3}' | sed 's/go//')
-        fi
-        print_skip "Go 已安装 (版本: $CURRENT_VERSION)，跳过安装"
-        print_info "如需重新安装，请先卸载现有版本"
-        return 0
-    fi
-    
-    local GO_LATEST="1.22.0"
-    local GO_VERSION=${1:-$GO_LATEST}
-    local GO_ARCH=""
-    
-    # 确定架构
-    case $ARCH_TYPE in
-        x86_64|amd64)
-            GO_ARCH="amd64"
-            ;;
-        aarch64|arm64)
-            GO_ARCH="arm64"
-            ;;
-        armv7l|armhf)
-            GO_ARCH="armv6l"
-            ;;
-        *)
-            print_error "不支持的架构: $ARCH_TYPE"
-            return 1
-            ;;
-    esac
-    
-    # 确定操作系统
-    local GO_OS=""
-    case $OS_TYPE in
-        ubuntu|debian|linuxmint|pop)
-            GO_OS="linux"
-            ;;
-        rhel|centos|fedora|rocky|almalinux)
-            GO_OS="linux"
-            ;;
-        macos)
-            GO_OS="darwin"
-            ;;
-        *)
-            GO_OS="linux"
-            ;;
-    esac
-    
-    local GO_PACKAGE="go${GO_VERSION}.${GO_OS}-${GO_ARCH}.tar.gz"
-    local GO_URL="https://go.dev/dl/${GO_PACKAGE}"
-    
-    print_info "准备下载 Go $GO_VERSION ($GO_OS-$GO_ARCH)"
-    print_item "下载地址: $GO_URL"
-    
-    # 创建临时目录
-    local TMP_DIR=$(mktemp -d)
-    cd "$TMP_DIR"
-    
-    # 下载 Go
-    print_info "正在下载..."
-    if command -v wget &> /dev/null; then
-        wget -q --show-progress "$GO_URL" -O "$GO_PACKAGE"
-    elif command -v curl &> /dev/null; then
-        curl -L --progress-bar "$GO_URL" -o "$GO_PACKAGE"
-    else
-        print_error "需要 wget 或 curl 来下载文件"
-        cd - > /dev/null
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    if [ $? -ne 0 ]; then
-        print_error "下载失败"
-        cd - > /dev/null
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    # 删除旧版本
-    print_info "清理旧版本..."
-    sudo rm -rf /usr/local/go 2>/dev/null || true
-    
-    # 解压安装
-    print_info "正在安装..."
-    sudo tar -C /usr/local -xzf "$GO_PACKAGE"
-    
-    if [ $? -eq 0 ]; then
-        print_success "Go $GO_VERSION 安装成功"
-        
-        # 配置环境变量
-        print_info "配置环境变量..."
-        
-        local PROFILE_FILE=""
-        if [ -f "$HOME/.bashrc" ]; then
-            PROFILE_FILE="$HOME/.bashrc"
-        elif [ -f "$HOME/.zshrc" ]; then
-            PROFILE_FILE="$HOME/.zshrc"
-        elif [ -f "$HOME/.profile" ]; then
-            PROFILE_FILE="$HOME/.profile"
-        fi
-        
-        if [ -n "$PROFILE_FILE" ]; then
-            # 检查是否已配置
-            if ! grep -q "export PATH=\$PATH:/usr/local/go/bin" "$PROFILE_FILE"; then
-                echo "" >> "$PROFILE_FILE"
-                echo "# Go 环境变量" >> "$PROFILE_FILE"
-                echo "export PATH=\$PATH:/usr/local/go/bin" >> "$PROFILE_FILE"
-                echo "export GOPATH=\$HOME/go" >> "$PROFILE_FILE"
-                echo "export PATH=\$PATH:\$GOPATH/bin" >> "$PROFILE_FILE"
-                print_success "环境变量已添加到 $PROFILE_FILE"
-            else
-                print_success "环境变量已存在"
-            fi
-        fi
-        
-        # 立即生效
-        export PATH=$PATH:/usr/local/go/bin
-        export GOPATH=$HOME/go
-        export PATH=$PATH:$GOPATH/bin
-        
-        # 验证安装
-        if [ -f /usr/local/go/bin/go ]; then
-            local INSTALLED_VERSION=$(/usr/local/go/bin/go version 2>/dev/null | awk '{print $3}')
-            print_success "Go 安装验证成功: $INSTALLED_VERSION"
-        fi
-    else
-        print_error "安装失败"
-    fi
-    
-    # 清理
-    cd - > /dev/null
-    rm -rf "$TMP_DIR"
-}
-
-# 安装 GoLand IDE
-install_goland() {
-    print_section "安装 GoLand IDE"
-    
-    # 检测 JetBrains Toolbox
-    if command -v jetbrains-toolbox &> /dev/null; then
-        print_info "检测到 JetBrains Toolbox，使用它安装 GoLand..."
-        jetbrains-toolbox install goland
-        return $?
-    fi
-    
-    # 手动安装
-    local GOLAND_VERSION="2024.1"
-    local GOLAND_URL=""
-    
-    case $OS_TYPE in
-        ubuntu|debian|linuxmint|pop)
-            print_info "推荐使用 Snap 安装 GoLand"
-            print_item "运行: sudo snap install goland --classic"
-            ;;
-        rhel|centos|fedora|rocky|almalinux)
-            print_info "推荐使用 Flatpak 安装 GoLand"
-            print_item "运行: flatpak install flathub com.jetbrains.GoLand"
-            ;;
-        macos)
-            print_info "推荐使用 Homebrew 安装 GoLand"
-            print_item "运行: brew install --cask goland"
-            ;;
-        *)
-            print_warning "请手动下载 GoLand: https://www.jetbrains.com/go/download/"
-            ;;
-    esac
-    
-    print_info ""
-    print_info "或者安装 JetBrains Toolbox 进行统一管理:"
-    print_item "下载地址: https://www.jetbrains.com/toolbox-app/"
-}
-
-# 安装 Go 常用工具
-install_go_tools() {
-    print_section "安装 Go 常用开发工具"
-    
-    # 确保 Go 可用
-    if ! check_go_installed; then
-        print_error "Go 未安装，请先安装 Go"
-        return 1
-    fi
-    
-    local GO_CMD="go"
-    if [ -f /usr/local/go/bin/go ]; then
-        GO_CMD="/usr/local/go/bin/go"
-    fi
-    
-    # 工具列表：工具名 显示名
-    declare -A GO_TOOLS=(
-        ["gopls"]="Go 语言服务器"
-        ["goimports"]="导入管理工具"
-        ["dlv"]="Delve 调试器"
-        ["staticcheck"]="静态分析工具"
-        ["air"]="热重载工具"
-        ["goctl"]="go-zero 代码生成器"
-        ["wire"]="依赖注入工具"
-    )
-    
-    # 工具安装命令映射
-    declare -A GO_TOOL_INSTALL=(
-        ["gopls"]="golang.org/x/tools/gopls@latest"
-        ["goimports"]="golang.org/x/tools/cmd/goimports@latest"
-        ["dlv"]="github.com/go-delve/delve/cmd/dlv@latest"
-        ["staticcheck"]="honnef.co/go/tools/cmd/staticcheck@latest"
-        ["air"]="github.com/air-verse/air@latest"
-        ["goctl"]="github.com/zeromicro/go-zero/tools/goctl@latest"
-        ["wire"]="github.com/google/wire/cmd/wire@latest"
-    )
-    
-    print_info "gofmt 已包含在 Go 安装中"
-    
-    for tool in "${!GO_TOOLS[@]}"; do
-        local tool_name="${GO_TOOLS[$tool]}"
-        local install_path="${GO_TOOL_INSTALL[$tool]}"
-        
-        if check_go_tool_installed "$tool"; then
-            print_skip "$tool_name ($tool) 已安装"
-        else
-            print_info "安装 $tool_name ($tool)..."
-            $GO_CMD install "$install_path" 2>/dev/null
-            if [ $? -eq 0 ]; then
-                print_success "$tool_name 安装成功"
-            else
-                print_warning "$tool_name 安装失败"
-            fi
-        fi
-    done
-    
-    print_success "Go 工具检查完成"
-}
-
 # 安装 Node.js 环境
 install_node() {
     print_section "安装 Node.js 环境"
@@ -474,7 +188,7 @@ install_node() {
     # 检查是否已安装
     if check_node_installed; then
         local CURRENT_VERSION=$(node --version)
-        print_skip "Node.js 已安装 (版本: $CURRENT_VERSION)，跳过安装"
+        print_skip "Node.js 已安装 (版本: $CURRENT_VERSION)"
         return 0
     fi
     
@@ -512,7 +226,7 @@ install_bun() {
     # 检查是否已安装
     if check_bun_installed; then
         local CURRENT_VERSION=$(bun --version)
-        print_skip "Bun 已安装 (版本: $CURRENT_VERSION)，跳过安装"
+        print_skip "Bun 已安装 (版本: $CURRENT_VERSION)"
         return 0
     fi
     
@@ -534,7 +248,7 @@ install_mysql() {
     # 检查是否已安装
     if check_mysql_installed; then
         local CURRENT_VERSION=$(mysql --version | awk '{print $3}' | tr -d ',')
-        print_skip "MySQL 已安装 (版本: $CURRENT_VERSION)，跳过安装"
+        print_skip "MySQL 已安装 (版本: $CURRENT_VERSION)"
         return 0
     fi
     
@@ -542,14 +256,18 @@ install_mysql() {
         ubuntu|debian|linuxmint|pop)
             print_info "使用 apt 安装 MySQL..."
             print_item "运行: sudo apt update && sudo apt install -y mysql-server"
+            print_item "启动: sudo systemctl start mysql"
+            print_item "安全配置: sudo mysql_secure_installation"
             ;;
         rhel|centos|fedora|rocky|almalinux)
             print_info "使用 yum/dnf 安装 MySQL..."
             print_item "运行: sudo dnf install -y mysql-server"
+            print_item "启动: sudo systemctl start mysqld"
             ;;
         macos)
             print_info "使用 Homebrew 安装 MySQL..."
             print_item "运行: brew install mysql"
+            print_item "启动: brew services start mysql"
             ;;
         *)
             print_warning "请手动安装 MySQL: https://dev.mysql.com/downloads/"
@@ -557,33 +275,22 @@ install_mysql() {
     esac
 }
 
-install_redis() {
-    print_section "安装 Redis 缓存"
+# 配置数据库
+config_database() {
+    print_section "配置数据库"
     
-    # 检查是否已安装
-    if check_redis_installed; then
-        local CURRENT_VERSION=$(redis-server --version | awk '{print $3}' | cut -d'=' -f2)
-        print_skip "Redis 已安装 (版本: $CURRENT_VERSION)，跳过安装"
-        return 0
-    fi
+    print_info "请在 MySQL 中执行以下 SQL 创建数据库:"
+    echo ""
+    echo "    CREATE DATABASE happy_farm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    echo "    CREATE USER 'farm_user'@'localhost' IDENTIFIED BY 'your_password';"
+    echo "    GRANT ALL PRIVILEGES ON happy_farm.* TO 'farm_user'@'localhost';"
+    echo "    FLUSH PRIVILEGES;"
+    echo ""
     
-    case $OS_TYPE in
-        ubuntu|debian|linuxmint|pop)
-            print_info "使用 apt 安装 Redis..."
-            print_item "运行: sudo apt update && sudo apt install -y redis-server"
-            ;;
-        rhel|centos|fedora|rocky|almalinux)
-            print_info "使用 yum/dnf 安装 Redis..."
-            print_item "运行: sudo dnf install -y redis"
-            ;;
-        macos)
-            print_info "使用 Homebrew 安装 Redis..."
-            print_item "运行: brew install redis"
-            ;;
-        *)
-            print_warning "请手动安装 Redis: https://redis.io/download"
-            ;;
-    esac
+    print_info "然后在项目根目录创建 .env 文件:"
+    echo ""
+    echo "    DATABASE_URL=\"mysql://farm_user:your_password@localhost:3306/happy_farm\""
+    echo ""
 }
 
 # 生成环境报告
@@ -598,19 +305,6 @@ generate_report() {
     
     echo ""
     echo -e "${WHITE}开发环境状态:${NC}"
-    
-    # Go
-    if check_go_installed; then
-        local GO_VER=""
-        if command -v go &> /dev/null; then
-            GO_VER=$(go version | awk '{print $3}')
-        elif [ -f /usr/local/go/bin/go ]; then
-            GO_VER=$(/usr/local/go/bin/go version | awk '{print $3}')
-        fi
-        print_item "Go: $GO_VER ✓"
-    else
-        print_item "Go: 未安装 ✗"
-    fi
     
     # Node.js
     if check_node_installed; then
@@ -633,25 +327,18 @@ generate_report() {
         print_item "Git: 未安装 ✗"
     fi
     
-    # Docker
-    if command -v docker &> /dev/null; then
-        print_item "Docker: $(docker --version | awk '{print $3}' | tr -d ',') ✓"
-    else
-        print_item "Docker: 未安装 -"
-    fi
-    
     # MySQL
     if check_mysql_installed; then
         print_item "MySQL: $(mysql --version | awk '{print $3}' | tr -d ',') ✓"
     else
-        print_item "MySQL: 未安装 -"
+        print_item "MySQL: 未安装 ✗"
     fi
     
-    # Redis
-    if check_redis_installed; then
-        print_item "Redis: $(redis-server --version | awk '{print $3}' | cut -d'=' -f2) ✓"
+    # 项目依赖
+    if [ -d "node_modules" ]; then
+        print_item "项目依赖: 已安装 ✓"
     else
-        print_item "Redis: 未安装 -"
+        print_item "项目依赖: 未安装"
     fi
     
     echo ""
@@ -665,113 +352,82 @@ show_help() {
     echo ""
     echo -e "${WHITE}选项:${NC}"
     echo "  detect          检测当前环境"
-    echo "  install-go      安装 Go 语言环境"
-    echo "  install-goland  安装 GoLand IDE"
-    echo "  install-tools   安装 Go 常用开发工具"
     echo "  install-node    安装 Node.js"
     echo "  install-bun     安装 Bun 运行时"
     echo "  install-mysql   安装 MySQL 数据库"
-    echo "  install-redis   安装 Redis 缓存"
-    echo "  install-all     一键安装所有环境"
+    echo "  config-db       显示数据库配置说明"
+    echo "  install-all     一键安装所有必需环境"
     echo "  report          生成环境报告"
     echo "  help            显示此帮助信息"
     echo ""
-    echo -e "${WHITE}特点:${NC}"
-    echo "  - 自动检测已安装的服务，跳过重复安装"
-    echo "  - 智能识别操作系统和架构"
-    echo "  - 支持多种 Linux 发行版和 macOS"
+    echo -e "${WHITE}项目依赖:${NC}"
+    echo "  - Bun (必需) - 运行时"
+    echo "  - Node.js (推荐) - 部分工具依赖"
+    echo "  - MySQL (必需) - 数据库"
     echo ""
     echo -e "${WHITE}示例:${NC}"
     echo "  $0 detect       # 检测当前环境"
-    echo "  $0 install-go   # 安装 Go 语言"
+    echo "  $0 install-bun  # 安装 Bun"
     echo "  $0 install-all  # 一键安装所有环境"
     echo ""
 }
 
 # 一键安装所有环境
 install_all() {
-    print_header "开始一键部署 GoLand 开发环境"
+    print_header "开始一键部署开心农场环境"
     
     # 1. 检测环境
     detect_os
     detect_dev_tools
     echo ""
     
-    # 2. 安装 Go（自动检测是否已安装）
-    if check_go_installed; then
-        print_info "Go 已安装，跳过"
-    else
-        read -p "是否安装 Go 语言环境？(y/n): " confirm
-        if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            install_go
-        fi
-    fi
-    echo ""
-    
-    # 3. 安装 Go 工具
-    if check_go_installed; then
-        read -p "是否安装/更新 Go 常用开发工具？(y/n): " confirm
-        if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            install_go_tools
-        fi
-    fi
-    echo ""
-    
-    # 4. 安装 Node.js（自动检测是否已安装）
+    # 2. 安装 Node.js
     if check_node_installed; then
         print_info "Node.js 已安装，跳过"
     else
+        echo ""
         read -p "是否安装 Node.js？(y/n): " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
             install_node
         fi
     fi
-    echo ""
     
-    # 5. 安装 Bun（自动检测是否已安装）
+    # 3. 安装 Bun
     if check_bun_installed; then
         print_info "Bun 已安装，跳过"
     else
+        echo ""
         read -p "是否安装 Bun？(y/n): " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
             install_bun
         fi
     fi
-    echo ""
     
-    # 6. 安装 MySQL（自动检测是否已安装）
+    # 4. 安装 MySQL
     if check_mysql_installed; then
         print_info "MySQL 已安装，跳过"
     else
+        echo ""
         read -p "是否安装 MySQL？(y/n): " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
             install_mysql
         fi
     fi
-    echo ""
     
-    # 7. 安装 Redis（自动检测是否已安装）
-    if check_redis_installed; then
-        print_info "Redis 已安装，跳过"
-    else
-        read -p "是否安装 Redis？(y/n): " confirm
-        if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            install_redis
-        fi
-    fi
+    # 5. 数据库配置说明
     echo ""
-    
-    # 8. GoLand IDE
-    read -p "是否安装 GoLand IDE？(y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        install_goland
-    fi
-    echo ""
+    config_database
     
     # 生成报告
     generate_report
     
-    print_header "部署完成！"
+    print_header "环境检测完成！"
+    
+    echo -e "${CYAN}下一步:${NC}"
+    echo "  1. 配置 .env 文件中的数据库连接"
+    echo "  2. 运行 ./start.sh init 初始化项目"
+    echo "  3. 运行 ./start.sh 启动服务器"
+    echo ""
 }
 
 # 主函数
@@ -781,20 +437,6 @@ main() {
             print_header "环境检测"
             detect_os
             detect_dev_tools
-            ;;
-        install-go)
-            print_header "安装 Go 语言环境"
-            detect_os
-            install_go "${2:-}"
-            ;;
-        install-goland)
-            print_header "安装 GoLand IDE"
-            detect_os
-            install_goland
-            ;;
-        install-tools)
-            print_header "安装 Go 开发工具"
-            install_go_tools
             ;;
         install-node)
             print_header "安装 Node.js"
@@ -810,10 +452,9 @@ main() {
             detect_os
             install_mysql
             ;;
-        install-redis)
-            print_header "安装 Redis"
-            detect_os
-            install_redis
+        config-db)
+            print_header "数据库配置"
+            config_database
             ;;
         install-all)
             install_all
