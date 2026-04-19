@@ -98,6 +98,12 @@ export default function FarmPage() {
       
       setUser(data);
       console.log('用户数据:', data);
+      console.log('土地数据:', {
+        tudi1: data.userlist?.tudi1,
+        tudi2: data.userlist?.tudi2,
+        tudi3: data.userlist?.tudi3,
+        fangwu: data.userlist?.fangwu,
+      });
     } catch (error) {
       console.error('获取用户数据失败:', error);
       router.push('/');
@@ -210,16 +216,16 @@ export default function FarmPage() {
       <div className="easteBox">
         <ul className="easte">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => {
-            // tudi: 0=未开垦(灰色土地), 1=已开垦(亮色土地)
-            // zt: -1=未开垦状态, 0=空地可播种, 1=已播种, 2=枯萎
+            // tudi 字段直接存储土地图片编号（0-4）
+            // 0 = 未开垦（灰色土地）
+            // 1 = 已开垦（亮色土地）
+            // 2-4 = 其他状态
             const tudi = user?.userlist?.[`tudi${i}`];
-            const zt = user?.userlist?.[`zt${i}`];
             const isActive = activeLand === i;
             
-            // 根据土地状态决定显示哪个图片
-            // 如果 zt 是 -1（未开垦），显示 tudi0.png（灰色土地）
-            // 否则显示 tudi1.png（已开垦的亮色土地）
-            const tudiImage = zt === '-1' ? 0 : (tudi || 1);
+            // 直接使用数据库中的 tudi 值作为图片编号
+            // 如果 tudi 为空或未定义，默认为 0（未开垦）
+            const tudiImage = tudi ?? 0;
             
             return (
               <li 
