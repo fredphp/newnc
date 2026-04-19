@@ -54,6 +54,10 @@ print_error() {
     echo -e "  ${RED}[✗]${NC} $1"
 }
 
+print_skip() {
+    echo -e "  ${CYAN}[跳过]${NC} $1"
+}
+
 print_item() {
     echo -e "    ${WHITE}•${NC} $1"
 }
@@ -175,9 +179,72 @@ detect_dev_tools() {
     fi
 }
 
+# 检查 Go 是否已安装
+check_go_installed() {
+    if command -v go &> /dev/null; then
+        return 0
+    fi
+    if [ -f /usr/local/go/bin/go ]; then
+        return 0
+    fi
+    return 1
+}
+
+# 检查 Node.js 是否已安装
+check_node_installed() {
+    command -v node &> /dev/null
+}
+
+# 检查 Bun 是否已安装
+check_bun_installed() {
+    command -v bun &> /dev/null
+}
+
+# 检查 MySQL 是否已安装
+check_mysql_installed() {
+    command -v mysql &> /dev/null
+}
+
+# 检查 Redis 是否已安装
+check_redis_installed() {
+    command -v redis-server &> /dev/null
+}
+
+# 检查 Go 工具是否已安装
+check_go_tool_installed() {
+    local tool_name=$1
+    local GO_CMD="go"
+    
+    if [ -f /usr/local/go/bin/go ]; then
+        GO_CMD="/usr/local/go/bin/go"
+    fi
+    
+    # 检查 GOPATH/bin 下是否存在该工具
+    local GOPATH=$($GO_CMD env GOPATH 2>/dev/null)
+    if [ -n "$GOPATH" ] && [ -f "$GOPATH/bin/$tool_name" ]; then
+        return 0
+    fi
+    
+    # 检查是否在 PATH 中
+    command -v "$tool_name" &> /dev/null
+}
+
 # 安装 Go 环境
 install_go() {
     print_section "安装 Go 语言环境"
+    
+    # 检查是否已安装
+    if check_go_installed; then
+        local CURRENT_VERSION=""
+        if command -v go &> /dev/null; then
+            CURRENT_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
+        elif [ -f /usr/local/go/bin/go ]; then
+            CURRENT_VERSION=$(/usr/local/go/bin/go version | awk '{print $3}' | sed 's/go//')
+        fi
+        print_skip "Go 已安装 (版本: $CURRENT_VERSION)，跳过安装"
+        print_info "如需重新安装，请先卸载现有版本"
+        return 0
+    fi
     
     local GO_LATEST="1.22.0"
     local GO_VERSION=${1:-$GO_LATEST}
@@ -290,7 +357,7 @@ install_go() {
         export PATH=$PATH:$GOPATH/bin
         
         # 验证安装
-        if command -v go &> /dev/null || [ -f /usr/local/go/bin/go ]; then
+        if [ -f /usr/local/go/bin/go ]; then
             local INSTALLED_VERSION=$(/usr/local/go/bin/go version 2>/dev/null | awk '{print $3}')
             print_success "Go 安装验证成功: $INSTALLED_VERSION"
         fi
@@ -346,7 +413,7 @@ install_go_tools() {
     print_section "安装 Go 常用开发工具"
     
     # 确保 Go 可用
-    if ! command -v go &> /dev/null && [ ! -f /usr/local/go/bin/go ]; then
+    if ! check_go_installed; then
         print_error "Go 未安装，请先安装 Go"
         return 1
     fi
@@ -356,48 +423,60 @@ install_go_tools() {
         GO_CMD="/usr/local/go/bin/go"
     fi
     
-    print_info "安装 gopls (Go 语言服务器)..."
-    $GO_CMD install golang.org/x/tools/gopls@latest 2>/dev/null
-    [ $? -eq 0 ] && print_success "gopls 安装成功" || print_warning "gopls 安装失败"
+    # 工具列表：工具名 显示名
+    declare -A GO_TOOLS=(
+        ["gopls"]="Go 语言服务器"
+        ["goimports"]="导入管理工具"
+        ["dlv"]="Delve 调试器"
+        ["staticcheck"]="静态分析工具"
+        ["air"]="热重载工具"
+        ["goctl"]="go-zero 代码生成器"
+        ["wire"]="依赖注入工具"
+    )
     
-    print_info "安装 gofmt (代码格式化)..."
-    # gofmt 已包含在 Go 中
-    print_success "gofmt 已包含在 Go 安装中"
+    # 工具安装命令映射
+    declare -A GO_TOOL_INSTALL=(
+        ["gopls"]="golang.org/x/tools/gopls@latest"
+        ["goimports"]="golang.org/x/tools/cmd/goimports@latest"
+        ["dlv"]="github.com/go-delve/delve/cmd/dlv@latest"
+        ["staticcheck"]="honnef.co/go/tools/cmd/staticcheck@latest"
+        ["air"]="github.com/air-verse/air@latest"
+        ["goctl"]="github.com/zeromicro/go-zero/tools/goctl@latest"
+        ["wire"]="github.com/google/wire/cmd/wire@latest"
+    )
     
-    print_info "安装 goimports (导入管理)..."
-    $GO_CMD install golang.org/x/tools/cmd/goimports@latest 2>/dev/null
-    [ $? -eq 0 ] && print_success "goimports 安装成功" || print_warning "goimports 安装失败"
+    print_info "gofmt 已包含在 Go 安装中"
     
-    print_info "安装 delve (调试器)..."
-    $GO_CMD install github.com/go-delve/delve/cmd/dlv@latest 2>/dev/null
-    [ $? -eq 0 ] && print_success "delve 安装成功" || print_warning "delve 安装失败"
+    for tool in "${!GO_TOOLS[@]}"; do
+        local tool_name="${GO_TOOLS[$tool]}"
+        local install_path="${GO_TOOL_INSTALL[$tool]}"
+        
+        if check_go_tool_installed "$tool"; then
+            print_skip "$tool_name ($tool) 已安装"
+        else
+            print_info "安装 $tool_name ($tool)..."
+            $GO_CMD install "$install_path" 2>/dev/null
+            if [ $? -eq 0 ]; then
+                print_success "$tool_name 安装成功"
+            else
+                print_warning "$tool_name 安装失败"
+            fi
+        fi
+    done
     
-    print_info "安装 staticcheck (静态分析)..."
-    $GO_CMD install honnef.co/go/tools/cmd/staticcheck@latest 2>/dev/null
-    [ $? -eq 0 ] && print_success "staticcheck 安装成功" || print_warning "staticcheck 安装失败"
-    
-    print_info "安装 air (热重载)..."
-    $GO_CMD install github.com/air-verse/air@latest 2>/dev/null
-    [ $? -eq 0 ] && print_success "air 安装成功" || print_warning "air 安装失败"
-    
-    print_info "安装 gin (Web框架)..."
-    $GO_CMD install github.com/gin-gonic/gin@latest 2>/dev/null
-    [ $? -eq 0 ] && print_success "gin 安装成功" || print_warning "gin 安装失败"
-    
-    print_info "安装 go-zero (微服务框架)..."
-    $GO_CMD install github.com/zeromicro/go-zero/tools/goctl@latest 2>/dev/null
-    [ $? -eq 0 ] && print_success "go-zero/goctl 安装成功" || print_warning "go-zero 安装失败"
-    
-    print_info "安装 wire (依赖注入)..."
-    $GO_CMD install github.com/google/wire/cmd/wire@latest 2>/dev/null
-    [ $? -eq 0 ] && print_success "wire 安装成功" || print_warning "wire 安装失败"
-    
-    print_success "Go 工具安装完成"
+    print_success "Go 工具检查完成"
 }
 
 # 安装 Node.js 环境
 install_node() {
     print_section "安装 Node.js 环境"
+    
+    # 检查是否已安装
+    if check_node_installed; then
+        local CURRENT_VERSION=$(node --version)
+        print_skip "Node.js 已安装 (版本: $CURRENT_VERSION)，跳过安装"
+        return 0
+    fi
     
     case $OS_TYPE in
         ubuntu|debian|linuxmint|pop)
@@ -430,6 +509,13 @@ install_node() {
 install_bun() {
     print_section "安装 Bun 运行时"
     
+    # 检查是否已安装
+    if check_bun_installed; then
+        local CURRENT_VERSION=$(bun --version)
+        print_skip "Bun 已安装 (版本: $CURRENT_VERSION)，跳过安装"
+        return 0
+    fi
+    
     print_info "正在安装 Bun..."
     curl -fsSL https://bun.sh/install | bash
     
@@ -444,6 +530,13 @@ install_bun() {
 # 安装数据库
 install_mysql() {
     print_section "安装 MySQL 数据库"
+    
+    # 检查是否已安装
+    if check_mysql_installed; then
+        local CURRENT_VERSION=$(mysql --version | awk '{print $3}' | tr -d ',')
+        print_skip "MySQL 已安装 (版本: $CURRENT_VERSION)，跳过安装"
+        return 0
+    fi
     
     case $OS_TYPE in
         ubuntu|debian|linuxmint|pop)
@@ -466,6 +559,13 @@ install_mysql() {
 
 install_redis() {
     print_section "安装 Redis 缓存"
+    
+    # 检查是否已安装
+    if check_redis_installed; then
+        local CURRENT_VERSION=$(redis-server --version | awk '{print $3}' | cut -d'=' -f2)
+        print_skip "Redis 已安装 (版本: $CURRENT_VERSION)，跳过安装"
+        return 0
+    fi
     
     case $OS_TYPE in
         ubuntu|debian|linuxmint|pop)
@@ -500,21 +600,27 @@ generate_report() {
     echo -e "${WHITE}开发环境状态:${NC}"
     
     # Go
-    if command -v go &> /dev/null; then
-        print_item "Go: $(go version | awk '{print $3}') ✓"
+    if check_go_installed; then
+        local GO_VER=""
+        if command -v go &> /dev/null; then
+            GO_VER=$(go version | awk '{print $3}')
+        elif [ -f /usr/local/go/bin/go ]; then
+            GO_VER=$(/usr/local/go/bin/go version | awk '{print $3}')
+        fi
+        print_item "Go: $GO_VER ✓"
     else
         print_item "Go: 未安装 ✗"
     fi
     
     # Node.js
-    if command -v node &> /dev/null; then
+    if check_node_installed; then
         print_item "Node.js: $(node --version) ✓"
     else
         print_item "Node.js: 未安装 ✗"
     fi
     
     # Bun
-    if command -v bun &> /dev/null; then
+    if check_bun_installed; then
         print_item "Bun: v$(bun --version) ✓"
     else
         print_item "Bun: 未安装 ✗"
@@ -535,14 +641,14 @@ generate_report() {
     fi
     
     # MySQL
-    if command -v mysql &> /dev/null; then
+    if check_mysql_installed; then
         print_item "MySQL: $(mysql --version | awk '{print $3}' | tr -d ',') ✓"
     else
         print_item "MySQL: 未安装 -"
     fi
     
     # Redis
-    if command -v redis-server &> /dev/null; then
+    if check_redis_installed; then
         print_item "Redis: $(redis-server --version | awk '{print $3}' | cut -d'=' -f2) ✓"
     else
         print_item "Redis: 未安装 -"
@@ -570,6 +676,11 @@ show_help() {
     echo "  report          生成环境报告"
     echo "  help            显示此帮助信息"
     echo ""
+    echo -e "${WHITE}特点:${NC}"
+    echo "  - 自动检测已安装的服务，跳过重复安装"
+    echo "  - 智能识别操作系统和架构"
+    echo "  - 支持多种 Linux 发行版和 macOS"
+    echo ""
     echo -e "${WHITE}示例:${NC}"
     echo "  $0 detect       # 检测当前环境"
     echo "  $0 install-go   # 安装 Go 语言"
@@ -583,47 +694,70 @@ install_all() {
     
     # 1. 检测环境
     detect_os
+    detect_dev_tools
     echo ""
     
-    # 2. 安装 Go
-    read -p "是否安装 Go 语言环境？(y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        install_go
+    # 2. 安装 Go（自动检测是否已安装）
+    if check_go_installed; then
+        print_info "Go 已安装，跳过"
+    else
+        read -p "是否安装 Go 语言环境？(y/n): " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            install_go
+        fi
     fi
     echo ""
     
     # 3. 安装 Go 工具
-    read -p "是否安装 Go 常用开发工具？(y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        install_go_tools
+    if check_go_installed; then
+        read -p "是否安装/更新 Go 常用开发工具？(y/n): " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            install_go_tools
+        fi
     fi
     echo ""
     
-    # 4. 安装 Node.js
-    read -p "是否安装 Node.js？(y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        install_node
+    # 4. 安装 Node.js（自动检测是否已安装）
+    if check_node_installed; then
+        print_info "Node.js 已安装，跳过"
+    else
+        read -p "是否安装 Node.js？(y/n): " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            install_node
+        fi
     fi
     echo ""
     
-    # 5. 安装 Bun
-    read -p "是否安装 Bun？(y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        install_bun
+    # 5. 安装 Bun（自动检测是否已安装）
+    if check_bun_installed; then
+        print_info "Bun 已安装，跳过"
+    else
+        read -p "是否安装 Bun？(y/n): " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            install_bun
+        fi
     fi
     echo ""
     
-    # 6. 安装 MySQL
-    read -p "是否安装 MySQL？(y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        install_mysql
+    # 6. 安装 MySQL（自动检测是否已安装）
+    if check_mysql_installed; then
+        print_info "MySQL 已安装，跳过"
+    else
+        read -p "是否安装 MySQL？(y/n): " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            install_mysql
+        fi
     fi
     echo ""
     
-    # 7. 安装 Redis
-    read -p "是否安装 Redis？(y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        install_redis
+    # 7. 安装 Redis（自动检测是否已安装）
+    if check_redis_installed; then
+        print_info "Redis 已安装，跳过"
+    else
+        read -p "是否安装 Redis？(y/n): " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            install_redis
+        fi
     fi
     echo ""
     
