@@ -1,0 +1,640 @@
+﻿body{
+	background: none;
+}
+#head{
+	width: 100%;
+	height: 1rem;
+}
+#head .title{
+	width:3rem;
+	height: 1rem;
+	line-height: 1rem;
+	text-align: center;
+	font-size: 16px;
+	color: #f4771c;
+}
+#head .user{
+	width: 1.76rem;
+	height: 0.52rem;
+	margin-top: 0.27rem;
+	margin-right: 0.3rem;
+}
+#head .user li:nth-child(1) img{
+	display: block;
+	width: 1.13rem;
+	height: 0.52rem;
+	background: #f4771c;
+	border-radius: 0.04rem 0 0 0.04rem;
+	text-align: center;
+	line-height: 0.52rem;
+	color: #fff;
+}
+#head .user li:nth-child(2) a img{
+	display: block;
+	width: 0.63rem;
+	height: 0.52rem;
+	background: #2689e6;
+	border-radius: 0 0.04rem 0.04rem 0;
+	text-align: center;
+	line-height: 0.52rem;
+	color: #fff;
+}
+#head .user li:nth-of-type(2) a{
+	display: block;width: 100%;height: 100%;
+}
+/*=====================banner========================*/
+#banner{
+	width: 100%;
+	height: 3.2rem;
+	background: url(../images/yonghu.png) no-repeat;
+	background-size: 100% 100%;
+}
+
+#list{
+	width: 100%;
+	height: auto;
+	padding:0 0.2rem;
+	box-sizing: border-box;
+	margin-top: 0.4rem;
+}
+#list .keng{
+	height:0.9rem;
+	line-height: 0.9rem;
+	border-bottom:1px solid #ccc;
+	padding-left: 0.2rem;
+	box-sizing: border-box;
+}
+.zhouyun{
+	height: 0;border-bottom: none;overflow: hidden;transition: height 0.5s ease; 
+}
+.zhouyun ul{
+	width: 100%;height: 3.6rem;
+}
+.zhouyun ul li{
+	width: 100%;height: 0.6rem;line-height: 0.6rem;font-size: 0.25rem;
+	padding-left: 0.5rem;
+}
+.zhouyun ul li a{
+	display: block;width: 100%;height: 100%;
+}
+.keng span{
+	transition: all .5s ease;transform: rotate(0deg);
+}
+.height{
+	height: 3.6rem;
+}
+#my{
+	height: 1.05rem;width: 100%;
+	line-height: 1.05rem;
+	font-size: 18px;
+	color: #3f3f3f;
+	text-indent: 0.3rem;
+}
+/*=======================个人中心=============================*/
+#userMessage{
+	height: 1.72rem;
+	border-top: 0.01rem solid #ccc;
+	border-bottom: 0.01rem solid #ccc;
+	overflow: hidden;
+	margin-left: 0.2rem;
+	margin-right: 0.2rem;
+}
+
+#userMessage .userHead{
+	width: 1.1rem;
+	height: 1.1rem;
+	margin-top: 0.28rem;
+	background: #aaa;
+	border-radius: 50%;
+	margin-right: 0.2rem;
+}
+#userMessage .message{
+	height: 1.72rem;
+
+}
+#userMessage .message .hello{
+	height: 0.46rem;
+	line-height: 0.46rem;
+	margin-top: 0.3rem;
+}
+#userMessage .message .hello span{
+	color: red;
+}
+#userMessage .message .login{
+	height: 0.28rem;
+	line-height: 0.28rem;
+	color: #333;
+}
+#three{
+	height: 2.08rem;
+	border-bottom: 1px solid #ccc;
+	display: flex;
+}
+#three dl{
+	flex: 1;
+	height: 2.08rem;
+}
+#three dl dt{
+	width: 100%;
+	height: 1.27rem;
+	text-align: center;
+}
+#three dl dt img{
+	display: inline-block;
+	width: 0.84rem;
+	height: 0.84rem;
+	margin-top: 0.4rem;
+}
+#three dl dd{
+	width: 100%;
+	text-align: center;
+	height: 0.56rem;
+	line-height: 0.56rem;
+}
+#foot{
+	height: 1.4rem;
+}
+#foot .money{
+	width: 100%;
+	height: 1.4rem;
+	display: flex;
+}
+#foot .money li{
+	flex: 1;
+	height: 1.4rem;
+	text-align: center;
+	padding-top: 0.3rem;
+	box-sizing: border-box;
+}
+#foot .money li span{
+	display: inline-block;
+	width: 100%;
+	height: 0.4rem;
+	line-height: 0.4rem;
+}
+/*======================================安全设置==================================*/
+#changeThings{
+	width: 100%;
+	height: auto;
+	padding-left: 0.15rem;
+	padding-right: 0.15rem;
+	box-sizing: border-box;
+}
+#changeThings .changePw{
+	width: 7.2rem;
+	height: 0.7rem;
+	line-height: 0.7rem;
+	border-bottom: 0.01rem solid #ccc;
+	text-indent: 0.3rem;
+	font-size: 16px;
+	font-weight: 400;
+	margin-bottom: 0.13rem;
+}
+#changeThings .des{
+	width: 7.2rem;
+	height: 0.5rem;
+	line-height: 0.5rem;
+	text-indent: 0.3rem;
+}
+.btn{
+	width: 7rem;
+	height: 0.64rem;
+	border: 1px solid #ccc;
+	background: none;
+	margin-left: 0.1rem;
+}
+/*==============================果园钱包====================================*/
+
+#changeThings .yue{
+	width: 7rem;
+	height: 0.62rem;
+	border: 0.01rem solid #ccc;
+	margin-top: 0.3rem;
+}
+#changeThings .yue .qianbao{
+	display: inline-block;
+	width: 1.04rem;
+	height: 0.62rem;
+	line-height: 0.62rem;
+	background: #c3c3c3;
+}
+#changeThings .yue .yuan .open{
+	color: #f4771c;
+}
+#changeThings .yue .yuan{
+	display: inline-block;
+	width: 5.8rem;
+	height: 0.62rem;
+	line-height: 0.62rem;
+}
+#changeThings .yue .yuan .open_or_close{
+	display: inline-block;
+	width: 1.16rem;
+	height: 0.5rem;
+	background: #f4771c;
+	margin-top: 0.06rem;
+	position: relative;
+}
+#changeThings .yue .yuan .open_or_close .oc{
+	display: block;
+	width: 0.6rem;
+	height: 0.4rem;
+	line-height: 0.4rem;
+	text-align: center;
+	background: #fff;
+	position: absolute;
+	top: 0.05rem;
+	left: 0.02rem;
+	transition: all .3s ease;
+}
+/*================================账户==========================*/
+.my{
+	border-bottom: 0.01rem solid #ccc;
+	width: 7.2rem;
+	font-weight: 400;
+	font-size: 18px;
+	height: 0.88rem;
+	line-height: 0.88rem;
+	text-indent: 0.2rem;
+}
+.notice{
+	width: 7.2rem;
+	height: 1.5rem;
+	background: #bae5ff;
+	margin-top:0.18rem;
+	padding-left: 0.3rem;
+	box-sizing: border-box;
+}
+.notice .noticeH{
+	color: #39a7e9;
+}
+.notice .noticeP{
+	color: #dc9429;
+}
+.recharge{
+	width: 7rem;
+	height: 0.86rem;
+	border: 0.01rem solid #ccc;
+	border-radius: 0.2rem;
+	margin-top: 0.24rem;
+	overflow: hidden;
+}
+.recharge span{
+	display: inline-block;
+	height: 0.86rem;
+	line-height: 0.86rem;
+	font-size: 14px;
+}
+.recharge span.rechargeCount{
+	display: inline-block;
+	width: 1.5rem;
+	background: #d1d2d4;
+	text-align: center;
+}
+.recharge span.jin{
+	display: inline-block;
+	width: 0.9rem;
+	border-left: 0.01rem solid #ccc;
+	text-align: center;
+}
+.recharge input{
+	display: inline-block;
+	width: 4.2rem;
+	height: 0.86rem;
+}
+.pay{
+	width: 7.3rem;
+	height: 0.32rem;
+	margin-left: 0.15rem;
+	border-bottom: 0.01rem solid #999;
+	margin-top: 0.21rem;
+	position: relative;
+}
+.pay .payotherPay{
+	width: 1.9rem;
+	height: 0.28rem;
+	text-align: center;
+	line-height: 0.28rem;
+	background: #fff;
+	position: absolute;
+	top: 0.12rem;
+	left: 0.4rem;
+	color: #aaa;
+}
+.wxz{
+	width: 100%;
+	height: 1rem;
+}
+.wxz .payList{
+	width: 100%;
+	height: 1rem;
+	display: flex;
+	justify-content: space-around;
+}
+.wxz .payList .other{
+	width: 1.92rem;
+	height: 0.62rem;
+	border-radius: 0.1rem;
+	background:url(../images/wx.png) no-repeat;
+	background-size: 100% 100%;
+	margin-top: 0.24rem;
+}
+button{
+	display: block;
+	width:6.7rem;
+	height: 0.75rem;
+	background: #f4771c;  
+	line-height: 0.75rem;
+	text-align: center;
+	font-size: 18px;
+	font-weight: 500;
+	color: #fff;
+	border-radius: 0.1rem;
+	margin: 0.3rem auto;
+}
+
+/*=================================金币提现=========================================*/
+#changeThings .notice2{
+	width: 7.2rem;
+	height: 1.5rem;
+	background: #fcd6ba;
+	margin-top:0.18rem;
+	padding-left: 0.3rem;
+	box-sizing: border-box;
+}
+#changeThings .notice2 .noticeP{
+	color: #ff7919;
+}
+#changeThings .messages{
+	width: 6.75rem;
+	height: 0.88rem;
+	line-height: 6.75rem;
+}
+#changeThings .iptStyle{
+	overflow: hidden;
+}
+#changeThings .iptStyle .shuru{
+	display: inline-block;
+	width: 3rem;
+	height: 0.88rem;
+	line-height: 0.88rem;
+}
+#changeThings .iptStyle .iptImg{
+	display: inline-block;
+	width: 1.3rem;
+	height: 0.88rem;
+	text-align: center;
+	line-height: 0.88rem;
+	float: right;font-size: 0.25rem;
+	background: #62bbff;
+	color: #fff;position: relative;
+}
+#changeThings .iptStyle .iptImg input[type=file]{
+	width: 100%;height: 100%;position: absolute;left: 0;top: 0;opacity: 0;
+}
+#changeThings .iptStyle .selectCity{
+	display: inline-block;
+	font-size: 14px;
+	width: 1rem;
+	height: 0.88rem;
+	line-height: 0.88rem;
+	text-align: center;
+	float: right;
+	border-left: 0.01rem solid #ccc;
+}
+#changeThings .iptStyle .iptTwo{
+	display: inline-block;
+	width: 4.2rem;
+	height: 0.88rem;
+	padding-left: 0.2rem;
+}
+.selectCity{
+	padding-left: 0.2rem !important;
+}
+#changeThings .iptStyle .jinbi{
+	display: inline-block;
+	font-size: 14px;
+	width: 1rem;
+	height: 0.88rem;
+	line-height: 0.88rem;
+	text-align: center;
+	float: right;
+	border-left: 0.01rem solid #ccc;
+}
+/*=============================金币明细===========================================*/
+#changeThings .wenxinshow{
+	width: 7rem;
+	height: auto;
+	background: #bae5ff;
+	padding: 0.3rem;
+	box-sizing: border-box;
+/*	font-size: 14px;*/
+	margin: 0.4rem auto;
+	margin-bottom: 0.4rem;
+	overflow: hidden;
+}
+#changeThings .wenxinshow .coinP{
+	width: 100%;
+	height: auto;
+	line-height: 0.4rem;
+	color: #41a0d9;
+	text-indent: 0.25rem;
+}
+#changeThings .iptStyle{
+	width: 6.72rem;
+	height: 0.86rem;
+	border: 0.01rem solid #ccc;
+	margin-left: 0.18rem;
+	margin-top: 0.34rem;
+	border-radius: 0.2rem;
+	overflow: hidden;
+}
+#changeThings .iptStyle .allType{
+	display: inline-block;
+	width: 1.5rem;
+	height: 0.86rem;
+	line-height: 0.86rem;
+	text-align: center;
+	background: #d1d2d4;
+	font-size: 14px;
+}
+#changeThings .iptStyle .allSelect{
+	display: inline-block;
+	width: 5rem;
+	height: 0.87rem;
+	font-size: 14px;
+}
+#changeThings .iptStyle .ipt{
+	display: inline-block;
+	height: 0.87rem;
+	line-height: 0.87rem;
+	font-size: 14px;
+	text-indent: 0.2rem;
+}
+/*=======================重生记录================*/
+#changeThings .give{
+	width: 100%;
+	height: 0.9rem;
+	line-height: 0.9rem;
+	margin-top: 0.4rem;
+	border-bottom: 0.01rem solid #ccc;
+	font-size: 18px;
+	text-indent: 0.3rem;
+	font-weight:400;
+}
+#changeThings table{
+	width: 7.2rem;
+	height: auto;
+	border-collapse: collapse;
+}
+#changeThings table tr{
+	width: 7.2rem;
+	height: 0.6rem;
+}
+#changeThings table td, th {
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+    text-align:center;
+    font-size: 14px;
+    border:none;
+    padding:0 0.07rem;
+    font-weight: 100;
+}
+#changeThings table thead tr{
+	border-top: 0.01rem solid #ccc;
+	border-bottom: 0.01rem solid #ccc;
+	background: #e6e6e6;
+}
+/*========================果实赠送===========================*/
+
+#changeThings .getCode{
+	width: 1.6rem;
+	height: 100%;
+	background: #f4771c;
+	line-height: 0.82rem;
+	text-align: center;
+	float: right;
+	padding: 0;
+	margin: 0;
+	border-radius: 0; 
+	font-size: 14px;
+}
+#changeThings .fruitNotice{
+	width: 7.2rem;
+	height: 3.6rem;
+	background: #f0f0f0;
+	padding: 0.2rem; 
+	box-sizing: border-box;
+	margin-bottom: 0.3rem;
+}
+#changeThings .fruitNotice .fruitP{
+	width: 100%;
+	height: auto;
+	line-height: 0.4rem;
+	color: #6c6c6c;
+}
+/*===============推广链接===============*/
+
+#changeThings .QR_code{
+	width: 5.4rem;
+	height: 6.2rem;
+	border: 0.03rem solid #ccc;
+	margin: 0.2rem auto;
+}
+#changeThings .QR_code .codeTitle{
+	width: 100%;
+	height: 1rem;
+	text-align: center;
+	line-height: 1rem;
+	color: #f4771c;
+	background: #d3d1d0;
+	font-size: 14px;
+}
+#changeThings .QR_code .codePic{
+	width: 100%;
+	height: 4.4rem;
+	padding: 0.26rem 0.66rem;
+	box-sizing: border-box;
+}
+#changeThings .QR_code .codePic img{
+	display: block;
+	width: 3.96rem;
+	height: 3.96rem;
+}
+#changeThings .QR_code .netAddr{
+	height: 0.8rem;
+	line-height: 0.4rem;
+	word-wrap:break-word;
+}
+#changeThings .big{
+	min-height: 3rem;
+}
+
+/*========================推广列表========================*/
+#changeThings .guanli{
+	width: 100%;
+	height: 0.7rem;
+	line-height: 0.7rem;
+	font-size: 18px;
+	font-weight: 400;
+	text-indent: 0.3rem;
+	margin-top: 0.3rem;
+	border-bottom: 0.01rem solid #ccc;
+}
+#changeThings .count{
+	width: 100%;
+	height: auto;
+	text-indent: 0.3rem;
+	border-bottom: 0.01rem solid #ccc;
+}
+#changeThings .numCount{
+	width: 100%;
+	height: 0.7rem;
+	line-height: 0.7rem;
+}
+#changeThings .tableList thead tr{
+	border-top: 0.01rem solid #666;
+	border-bottom: 0.01rem solid #666;
+}
+#changeThings .listTile{
+	width: 100%;
+	height: 0.8rem;
+	line-height: 0.8rem;
+	font-size: 18px;
+	font-weight: 400;
+	text-indent: 0.3rem;
+}
+/*========================推广奖励========================*/
+
+
+/*=================================修改手机号码================================*/
+#changeThings .yanCode{
+	display: inline-block;
+	width: 2rem;
+	height: 100%;
+	line-height: 0.82rem;
+	text-align: center;
+	background: #f4771c;
+	color: #fff;
+	font-size: 14px;
+}
+#changeThings .ipta{
+	display: inline-block;
+	width: 3rem !important;
+}
+/*=======================实名认证=========================*/
+#changeThings .juMessage{
+	width: 6.8rem;
+	height: auto;
+	padding:0.3rem;
+	background: #fcd6ba; 
+	margin: 0.3rem auto;
+	box-sizing: border-box;
+}
+#changeThings .juMessage .juList{
+	width: 100%;
+	height: auto;
+	line-height: 0.4rem;
+	color: #f4771c;
+}

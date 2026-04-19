@@ -1,0 +1,385 @@
+﻿body{
+	width: 100%;
+	height: 100%;
+	background-image: url(/images/market/nmsc.jpg);
+	background-repeat:no-repeat;
+	background-size: 100% 100%;
+	background-attachment:fixed;
+}
+#ma_head{
+	width: 100%;
+	height: 2.15rem;
+	background: url(/images/market/01.png) no-repeat;
+	background-size:100% 100%;
+	position: fixed;left: 0;top: 0;z-index: 999;
+	
+}
+#ma_head1{
+	width: 100%;
+	height: 2.15rem;
+	background: url(/images/market/02.png) no-repeat;
+	background-size:100% 100%;
+	position: fixed;left: 0;top: 0;z-index: 999;
+	
+}
+.bigBoss{
+	width: 4.63rem; height:7.9rem; background: none;
+	position: relative;top:0.2rem; left:1.47rem;
+}
+.bigBoss li{
+	width:25%; height:30%; background:none; float: left; margin-bottom: 0.5rem;
+}
+.bigBoss li p:nth-of-type(1){
+	width: 1.04rem;
+	height: 0.3rem;
+	text-align: center;
+	line-height: 0.3rem;
+	background: url(/images/market/xiaokuang.png) no-repeat;
+	background-size:100% 100%;
+	margin-bottom: 0.1rem;
+	color: #fff;
+}
+.bigBoss li p:nth-of-type(2){
+	width: 1.04rem;
+	height: 0.3rem;
+	text-align: center;
+	line-height: 0.3rem;
+	background: url(/images/market/xiaokuang.png) no-repeat;
+	background-size:100% 100%;
+	color: #fff;
+}
+.bigBoss li img{
+	width: 100%;
+	height:45%;
+	margin-top: 0.3rem;
+}
+.bigBoss li p:nth-of-type(3){
+	width: 1.04rem;
+	height: 0.3rem;
+	text-align: center;
+	line-height: 0.3rem;
+	color: #fff;
+	margin-top: -0.03rem;
+}
+/*.block{*/
+	/*width: 100%;*/
+	/*height: 2.52rem;*/
+	/*!*margin-bottom: 0.46rem;*!*/
+/*}*/
+
+/*.block .blockList{*/
+	/*width: 4.6rem;*/
+	/*height: 1rem;*/
+	/*margin-left: 1.54rem;*/
+	/*margin-top:-0.1rem;*/
+/*}*/
+/*.block .blockList li{*/
+	 /*width: 1.04rem;*/
+	 /*height: 0.3rem;*/
+	 /*text-align: center;*/
+	 /*line-height: 0.3rem;*/
+	 /*background: url(/images/market/xiaokuang.png) no-repeat;*/
+	 /*background-size:100% 100%;*/
+	 /*margin-top: 0.18rem;*/
+	 /*margin-right: 0.1rem;*/
+	 /*color: #fff;*/
+/*}*/
+/*.block .fruit{*/
+	/*width: 6.67rem;*/
+	/*height: 1.3rem;*/
+	/*!*background: url(/images/market/tuopan.png) no-repeat;*!*/
+	/*!*background-size:100% 100%;*!*/
+	/*margin-left: 0.415rem;*/
+	/*padding-left: 0.72rem;*/
+	/*padding-top: 0.34rem;*/
+	/*box-sizing: border-box;*/
+	/*position: relative;*/
+/*}*/
+/*.block .fruit .fruitList{*/
+	/*width: 1.26rem;*/
+	/*height: 1.24rem;*/
+	/*margin-top:-0.3rem;*/
+
+/*}*/
+/*.block .fruit .fruitList dt{*/
+	/*width: 100%;*/
+	/*height: 0.9rem;*/
+	/*text-align: center;*/
+/*}*/
+/*.block .fruit .fruitList dt img{*/
+	/*display: inline-block;*/
+	/*width: 0.9rem;*/
+	/*height: 0.9rem;*/
+/*}*/
+/*.block .fruit .fruitList dd{*/
+	/*width: 100%;*/
+	/*text-align: center;*/
+/*}*/
+#ma_foot{
+	height: 1.8rem;width: 100%;
+	background: url(/images/market/xiamiantu.png) no-repeat;
+	background-size: 100% 100%;z-index: 999;
+	position: fixed;left: 0;bottom: 0;
+}
+#ma_foot .fanhui{
+	position: absolute;
+	top: 1rem;
+	left: 2.6rem;
+	display: block;
+	width: 2.66rem;
+	height: 0.74rem;
+}
+.alert_zy{
+	width: 95%;height: auto;background: #fff;position: absolute;
+	left: 0;right: 0;margin: auto;top: 0;overflow: hidden;display: block;
+}
+.alert_zy .saleRose{
+	width: 100%;
+	height: 2.26rem; 
+	position:relative; 
+}
+.alert_zy .saleRose .saleImg{
+	width: 60%;
+	height: 1.27rem;
+	display: flex;
+	justify-content: space-around;
+	margin-top: 0.4rem;
+	float:left;
+}
+.alert_zy .saleRose .saleImg img{
+
+}
+.alert_zy .saleRose .saleImg h1{
+	font-size: 30px;
+	color: #f49e1c;
+	margin-top:0.1rem;
+}
+.alert_zy .saleRose .fudu{
+	width: 40%;
+	height: auto;
+	float:left;
+	margin-top:0.5rem;
+}
+.alert_zy .saleRose .fudu p{
+	width: 100%;
+	text-align: center;
+	height: 0.5rem;
+	line-height: 0.5rem;
+	color: #f49e1c;
+	font-size: 16px;
+
+}
+.alert_zy .saleTable{
+	width: 100%;
+	height: auto;
+	margin-top: 0.3rem;
+}
+.alert_zy .saleTable td{
+	height: 0.56rem;
+	line-height: 0.56rem;
+	text-align: center;
+}
+.alert_zy .selectCard {
+	width: 6.26rem;
+	height: 7rem;
+	margin: 0.3rem auto;
+	position: relative;
+}
+.alert_zy .selectCard .changeLi{
+	width: 5rem;
+	height:auto;
+}
+.alert_zy .selectCard .changeLi li{
+	width: 1.08rem;
+	height: 0.46rem;
+	margin: 0.05rem;
+	text-align: center;
+	line-height: 0.46rem;
+	color: #fff;
+	float: left;
+}
+
+.alert_zy .selectCard .changeLi li:nth-child(1){
+	background: #289ce5;
+}
+.alert_zy .selectCard .changeLi li:nth-child(2){
+	background: #a8d7f4;
+}
+
+.alert_zy .selectCard div .auto_renew input{
+	
+	width: 0.22rem;
+	height: 0.22rem;
+	border: 1px solid #ccc;
+}
+.alert_zy .selectCard .cardItem{
+	width: 6.26rem;
+	height: 6rem;
+	border:1px solid #ccc;
+	position: absolute;
+	left: 0;
+	display: block;
+}
+.alert_zy .selectCard .red{
+	background: red;display: block;
+}
+.alert_zy .selectCard .yellow{
+	background: yellow;display: none;
+}
+#echart{
+	width: 100%;height: 100%;position: absolute;left: 0;top: 0;
+}
+.alert_zy .fruitTable{
+	width: 6.62rem;
+	height: auto;
+	margin:0 auto;
+}
+.alert_zy .fruitTable td{
+	width: 6.62rem;
+	height: 1.06rem;;
+	border:1px solid #ccc;
+	text-align: center;
+	line-height: 1.06rem;
+
+}
+.alert_zy .productDes{
+	width: 6.8rem;
+	height: 0.88rem;
+	line-height: 0.88rem;
+	display: flex;
+	justify-content: space-around;
+	border-bottom: 1px solid #ccc;
+	margin:0 auto;
+}
+.alert_zy .productDes span{
+	display: inline-block;
+	text-align: center;
+}
+.alert_zy .buy{
+	width: 6.72rem;
+	height: auto;
+	margin:0 auto;
+}
+.alert_zy .buy .maiTitle{
+	width: 100%;
+	height: 0.9rem;
+	line-height: 0.9rem;
+	color:#f49e1c;
+}
+.inputStyle{
+	width: 6.6rem;
+	height: 0.86rem;
+	border: 0.01rem solid #ccc;
+	margin-top: 0.34rem;
+	border-radius: 0.2rem;
+	overflow: hidden;
+}
+.inputStyle:nth-of-type(1){
+	margin-top: 0;
+}
+.inputStyle .allType{
+	display: inline-block;
+	width: 1.5rem;
+	height: 0.86rem;
+	line-height: 0.86rem;
+	text-align: center;
+	background: #d1d2d4;
+	font-size: 14px;
+}
+.inputStyle .ipt{
+	display: inline-block;
+	height: 0.87rem;
+	line-height: 0.87rem;
+	font-size: 14px;
+	text-indent: 0.2rem;
+}
+.inputStyle .rightPart{
+	display: inline-block;
+	width: 0.98rem;
+	height: 100%;
+	text-align: center;
+	line-height: 0.87rem;
+	float: right;
+}
+.alert_zy .fee{
+	width:6.6rem;
+	height: 0.8rem;
+	line-height: 0.8rem;
+	margin:0 auto;
+}
+.buyBtn{
+	background: #ff2c1a;
+	margin: 0 auto;
+}
+.sell .buyBtn{
+	background: #85ac4a;
+}
+.table_h2{
+	width: 100%;
+	height: 0.72rem;
+	line-height: 0.72rem;
+	font-size: 16px;
+	color: #f49e1c;
+	text-indent: 0.3rem;
+}
+.table_h2 .renew{
+	margin-right: 0.4rem;
+	font-weight: 400;
+	font-size: 16px;
+}
+.messTable{
+	width: 7rem;
+	height: auto;
+	border-collapse: collapse;
+	margin: 0 auto;
+}
+
+.messTable tr{
+	width: 7.2rem;
+	height: 0.6rem;
+	border-top: 0.01rem solid #ccc;
+	border-bottom: 0.01rem solid #ccc;
+}
+.messTable td, th {
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+    text-align:center;
+    font-size: 14px;
+    border:none;
+    padding:0 0.07rem;
+    font-weight: 100;
+}
+.messTable thead{
+	width: 100%;
+	height: auto;
+	background: #e6e6e6;
+}
+.wenxinshow{
+	width: 7rem;
+	height: auto;
+	background: #bae5ff;
+	box-sizing: border-box;
+/*	font-size: 14px;*/
+	margin: 0.4rem auto;
+	margin-bottom: 0.4rem;
+	overflow: hidden;
+	padding:0.3rem;
+}
+.wenxinshow .coinP{
+	width: 100%;
+	height: auto;
+	line-height: 0.4rem;
+	color: #41a0d9;
+}
+.biaoge{
+	width: 6.63rem;
+	height: 2.23rem;
+	margin:0 auto;
+	background: none;
+	border:1px solid #b6b5b5;
+}
+.biaoge li{
+	width: 16.31%; height:50%; background: none; float: left; line-height: 1.12rem; text-align: center;
+	border-right:1px solid #b6b5b5;border-bottom:1px solid #b6b5b5;
+}

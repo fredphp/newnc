@@ -1,0 +1,142 @@
+﻿body{
+	width: 100%;
+	height: 100%;
+	background-image: url(../images/ditu.jpg);
+	background-repeat:no-repeat;
+	background-size: 100% 100%;
+	background-attachment:fixed;
+}
+#main{
+	width: 7.2rem;
+	background: #fff;
+	margin-left: 0.15rem;
+	height: 100%;
+	margin-top: 0.18rem;
+	overflow: scroll;
+}
+#ex_head{
+	width: 100%;
+	height: 2.13rem;
+	background: url(/Public/gold/rem_zy/images/exhibition/01.png) no-repeat;
+	background-size: 100% 100%;
+	position: fixed;
+	top: 0;
+	z-index: 100;
+}
+#ex_title{
+	width：100%;
+	height: 0.78rem;
+	border-bottom: 1px solid #ccc;
+	color: #f49e1c;
+	padding-top: 0.25rem;
+	box-sizing: border-box;
+	text-indent: 0.3rem;
+	margin-top: 2.13rem;
+	
+}
+#select{
+	height: 3.5rem;
+	margin-top: 0.4rem;
+}
+#select .selectList{
+	height: 3.8rem;
+}
+#select .selectList li{
+	width: 6.72rem;
+	height: 0.84rem;
+	border: 0.01rem solid #ccc;
+	border-radius: 0.1rem;
+	margin-top: 0.27rem;
+	margin-left: 0.24rem;
+}
+#select .selectList li .type{
+	width: 1.05rem;
+	height: 0.84rem;
+	line-height: 0.84rem;
+	text-align: center;
+	background: #d1d2d4;
+}
+#select .selectList li select{
+	width: 5.62rem;
+	height: 0.84rem;
+	line-height: 0.84rem;
+	text-indent: 0.26rem; 
+}
+#select .selectList li select option{
+	width: 5.62rem;
+	height: 0.84rem;
+	line-height: 0.84rem;
+	text-indent: 0.26rem;
+}
+
+#comment{
+	width: 6.72rem;
+	height: 0.68rem;
+	background: #d1d2d4;
+	margin-left: 0.24rem;
+	border-radius: 0.08rem;
+}
+#comment li{
+	width: 1.2rem;
+	text-align: center;
+	height: 0.68rem;
+	line-height: 0.68rem;
+	border-right:0.01rem solid #fff;
+}
+#comment li.first{
+	width: 1.5rem;
+	height: 0.68rem;
+}
+#comment li.last{
+	width: 1.5rem;
+	height: 0.68rem;
+	border: 0;
+}
+button{
+	width:6.72rem;
+	height: 0.77rem;
+	background: #f4771c;
+	margin-top: 0.26rem;
+	margin-left: 0.24rem;
+	border-radius: 0.1rem;
+	color: #fff;
+	font-size: 14px;
+	font-weight: 400;
+}
+#description{
+	height: 2.58rem;
+	padding-left: 0.38rem;
+	padding-right: 0.38rem;
+	margin-top: 0.45rem;
+	box-sizing: border-box;
+}
+#description .t_des{
+	width:6.72rem;
+	height: 0.84rem;
+	line-height: 0.42rem;
+	color: #3e3e3e;
+}
+#description .p_des{
+	width:6.72rem;
+	height: 0.84rem;
+	line-height: 0.42rem;
+	color: #999;
+}
+#description .p_des:last-child{
+	margin-top: 0.2rem;
+}
+#ex_foot{
+	width:100%;
+	height: 1.8rem;
+	background: url(../images/xiamiantu.png) no-repeat;
+	background-size: 100% 100%;
+	position: fixed;
+	bottom: 0;
+}
+#ex_foot .fanhui{
+	margin-top: 1rem;
+	margin-left: 2.6rem;
+	display: block;
+	width: 2.66rem;
+	height: 0.74rem;
+}

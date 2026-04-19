@@ -1,0 +1,72 @@
+﻿.webuploader-container {
+    position: relative;
+}
+.webuploader-element-invisible {
+    position: absolute !important;
+    clip: rect(1px 1px 1px 1px); /* IE6, IE7 */
+    clip: rect(1px,1px,1px,1px);
+}
+.webuploader-pick {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    background: #00b7ee;
+    padding: 10px 15px;
+    color: #fff;
+    text-align: center;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.webuploader-pick-hover {
+    background: #00a2d4;
+}
+
+.webuploader-pick-disable {
+    opacity: 0.6;
+    pointer-events:none;
+}
+@media (min-width:768px){
+    .webuploader_col{
+        width: 134px;
+        float: left;
+        position: relative;
+        min-height: 1px;
+        padding-left: 12px;
+        padding-right: 12px;
+    } 
+    .file-item{
+        display: block;
+        width: 111px;
+        padding: 4px;
+        margin-bottom: 10px;
+        line-height: 1.42857143;
+        background-color: #ffffff;
+        border: 1px solid #dddddd;
+        border-radius: 4px;
+        -webkit-transition: border 0.2s ease-in-out;
+        -o-transition: border 0.2s ease-in-out;
+        transition: border 0.2s ease-in-out;
+    }
+}
+@media (min-width:400px){
+    .webuploader_col{
+        width: 134px;
+        position: relative;
+        min-height: 1px;
+        padding-left: 12px;
+        padding-right: 12px;
+    } 
+    .file-item{
+        display: block;
+        width: 111px;
+        padding: 4px;
+        margin-bottom: 10px;
+        line-height: 1.42857143;
+        background-color: #ffffff;
+        border: 1px solid #dddddd;
+        border-radius: 4px;
+        -webkit-transition: border 0.2s ease-in-out;
+        -o-transition: border 0.2s ease-in-out;
+        transition: border 0.2s ease-in-out;
+    }
+}
