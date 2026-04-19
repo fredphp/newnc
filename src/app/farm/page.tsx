@@ -585,8 +585,8 @@ export default function FarmPage() {
         </div>
       </div>
 
-      {/* 遮罩 */}
-      <div className="shade" style={{ display: showModal ? 'block' : 'none' }} onClick={() => setShowModal(null)}></div>
+      {/* 遮罩 - 签到弹窗不需要遮罩 */}
+      <div className="shade" style={{ display: (showModal && showModal !== 'qiandao') ? 'block' : 'none' }} onClick={() => setShowModal(null)}></div>
 
       {/* 提示消息 */}
       {toastMessage && (
