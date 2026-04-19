@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +10,130 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==================== 用户模块 ====================
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  username     String   @unique
+  password     String
+  nickname     String?
+  avatar       String?
+  coins        Int      @default(1000)  // 初始金币
+  exp          Int      @default(0)     // 经验值
+  level        Int      @default(1)     // 等级
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关联
+  lands        Land[]
+  inventory    Inventory[]
+  transactions Transaction[]
 }
 
-model Post {
+// ==================== 作物模块 ====================
+// 作物模板 - 定义所有可种植的作物
+model CropTemplate {
+  id              String   @id @default(cuid())
+  name            String                // 作物名称
+  icon            String                // 图标
+  seedPrice      Int                   // 种子价格
+  sellPrice      Int                   // 出售价格
+  growthTime     Int                   // 生长时间（秒）
+  expReward      Int      @default(10) // 收获经验奖励
+  description    String?               // 描述
+  stageCount     Int      @default(4)  // 生长阶段数
+  minLevel       Int      @default(1)  // 解锁等级
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // 关联
+  plantedCrops   PlantedCrop[]
+}
+
+// 土地 - 用户拥有的农场土地
+model Land {
+  id           String   @id @default(cuid())
+  userId       String
+  position     Int                   // 土地位置编号
+  isUnlocked   Boolean  @default(false) // 是否解锁
+  unlockPrice  Int      @default(1000)  // 解锁价格
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关联
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plantedCrop  PlantedCrop?
+
+  @@unique([userId, position])
+}
+
+// 种植记录 - 记录每块土地上种植的作物
+model PlantedCrop {
+  id            String   @id @default(cuid())
+  landId        String   @unique  // 一块地只能种一种作物
+  cropId        String
+  plantedAt     DateTime @default(now()) // 种植时间
+  isHarvested   Boolean  @default(false) // 是否已收获
+  harvestedAt   DateTime?              // 收获时间
+
+  // 关联
+  land          Land     @relation(fields: [landId], references: [id], onDelete: Cascade)
+  crop          CropTemplate @relation(fields: [cropId], references: [id])
+
+  // 作物状态通过时间计算，不存储
+}
+
+// ==================== 商店模块 ====================
+// 商店商品
+model ShopItem {
+  id          String   @id @default(cuid())
+  name        String                // 商品名称
+  type        String                // 类型: seed, tool, decoration
+  itemId      String                // 关联物品ID（作物模板ID或道具ID）
+  price       Int                   // 价格
+  stock       Int      @default(-1) // 库存，-1表示无限
+  minLevel    Int      @default(1)  // 解锁等级
+  description String?               // 描述
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==================== 背包模块 ====================
+// 用户背包
+model Inventory {
+  id       String   @id @default(cuid())
+  userId   String
+  itemType String                // 类型: seed, crop, tool
+  itemId   String                // 物品ID
+  quantity Int      @default(1)  // 数量
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemType, itemId])
+}
+
+// ==================== 交易模块 ====================
+// 交易记录
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String              // 类型: buy, sell, harvest, unlock
+  amount      Int                 // 金币变动（正为收入，负为支出）
+  description String              // 描述
+  createdAt   DateTime @default(now())
+
+  // 关联
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==================== 系统配置 ====================
+model SystemConfig {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  key       String   @unique
+  value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
