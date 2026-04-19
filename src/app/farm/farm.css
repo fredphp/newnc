@@ -1370,7 +1370,7 @@ html, body {
 /* 签到弹窗 */
 .qiandaoBox {
   width: 6.61rem;
-  height: 7.04rem;
+  height: 6.5rem;
   background: url(/images/ditu.png);
   background-size: cover;
   padding: 0;
@@ -1391,69 +1391,61 @@ html, body {
 /* 签到标题 */
 .qiandao-title {
   width: 100%;
-  height: 0.7rem;
+  height: 0.6rem;
   position: absolute;
-  top: 0.85rem;
+  top: 0.7rem;
   left: 0;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-}
-
-.qiandao-title img {
-  height: 0.5rem;
-  vertical-align: middle;
+  gap: 0.1rem;
 }
 
 .qiandao-title span {
-  font-size: 0.4rem;
+  font-size: 0.36rem;
   color: #642a00;
   font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 /* 连续签到天数 */
 .qiandao-count {
   width: 100%;
   text-align: center;
-  font-size: 0.26rem;
+  font-size: 0.22rem;
   color: #8b5a2b;
   position: absolute;
-  top: 1.55rem;
+  top: 1.25rem;
   left: 0;
-  background: linear-gradient(90deg, transparent, rgba(248, 181, 28, 0.2), transparent);
-  padding: 0.1rem 0;
 }
 
 .qiandao-days {
-  font-size: 0.45rem;
+  font-size: 0.36rem;
   color: #ff6b00;
   font-weight: bold;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-  margin: 0 0.1rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.15);
+  margin: 0 0.08rem;
 }
 
 /* 签到日历 */
 .qiandao-calendar {
-  width: 6rem;
-  height: 2.6rem;
+  width: 5.8rem;
+  height: 2rem;
   position: absolute;
-  top: 2.1rem;
-  left: 0.3rem;
+  top: 1.75rem;
+  left: 0.4rem;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-content: space-between;
-  gap: 0.08rem;
 }
 
 .qiandao-day {
-  width: 0.78rem;
-  height: 1.2rem;
+  width: 0.72rem;
+  height: 0.95rem;
   background: linear-gradient(180deg, #fff8e7 0%, #f5e6c8 100%);
-  border-radius: 0.12rem;
+  border-radius: 0.1rem;
   position: relative;
   text-align: center;
   border: 2px solid #d4b896;
@@ -1469,127 +1461,104 @@ html, body {
 .qiandao-day.signed {
   background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%);
   border-color: #66bb6a;
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
 }
 
 .qiandao-day.today {
   border-color: #ff9800;
-  border-width: 3px;
-  box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(255, 152, 0, 0.5); }
-  50% { box-shadow: 0 0 15px rgba(255, 152, 0, 0.8); }
+  border-width: 2px;
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
 }
 
 .qiandao-day .day-num {
-  font-size: 0.16rem;
+  font-size: 0.14rem;
   color: #5d4037;
-  margin-top: 0.08rem;
+  margin-top: 0.06rem;
   font-weight: bold;
-  background: rgba(255,255,255,0.5);
-  border-radius: 0.08rem;
-  padding: 0.02rem 0.1rem;
-  display: inline-block;
 }
 
 .qiandao-day.signed .day-num {
   color: #2e7d32;
-  background: rgba(200, 230, 201, 0.8);
 }
 
 .qiandao-day .day-reward {
-  margin-top: 0.12rem;
+  margin-top: 0.08rem;
 }
 
 .qiandao-day .gold-reward {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.15rem;
+  font-size: 0.13rem;
   color: #e65100;
   font-weight: bold;
 }
 
 .qiandao-day .gold-reward img {
-  width: 0.22rem;
-  height: 0.22rem;
-  margin-right: 0.03rem;
+  width: 0.18rem;
+  height: 0.18rem;
+  margin-right: 0.02rem;
 }
 
 .qiandao-day .diamond-reward {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.14rem;
+  font-size: 0.12rem;
   color: #1565c0;
   font-weight: bold;
-  margin-top: 0.03rem;
+  margin-top: 0.02rem;
 }
 
 .qiandao-day .diamond-reward img {
-  width: 0.2rem;
-  height: 0.2rem;
-  margin-right: 0.03rem;
+  width: 0.16rem;
+  height: 0.16rem;
+  margin-right: 0.02rem;
 }
 
 .qiandao-day .day-status {
-  font-size: 0.18rem;
+  font-size: 0.14rem;
   color: #4caf50;
   font-weight: bold;
-  margin-top: 0.08rem;
-  text-shadow: 1px 1px 1px rgba(255,255,255,0.8);
+  margin-top: 0.04rem;
 }
 
 .qiandao-day.today .day-status {
   color: #ff9800;
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
 }
 
 /* 今日奖励 */
 .qiandao-today-reward {
-  width: 5.8rem;
-  height: 0.9rem;
+  width: 5.6rem;
+  height: 0.7rem;
   position: absolute;
-  top: 4.85rem;
-  left: 0.4rem;
+  top: 3.9rem;
+  left: 0.5rem;
   background: linear-gradient(180deg, rgba(255, 248, 225, 0.95), rgba(255, 236, 179, 0.9));
-  border-radius: 0.15rem;
+  border-radius: 0.12rem;
   text-align: center;
-  line-height: 0.9rem;
   border: 2px solid #ffca28;
-  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .qiandao-done {
   color: #43a047;
-  font-size: 0.3rem;
+  font-size: 0.26rem;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.1rem;
-}
-
-.qiandao-done img {
-  width: 0.4rem;
-  height: 0.4rem;
+  gap: 0.08rem;
 }
 
 .qiandao-reward-info {
-  font-size: 0.22rem;
+  font-size: 0.2rem;
   color: #5d4037;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
+  gap: 0.12rem;
 }
 
 .qiandao-reward-info .reward-gold,
@@ -1597,9 +1566,9 @@ html, body {
   display: inline-flex;
   align-items: center;
   font-weight: bold;
-  background: rgba(255,255,255,0.6);
-  padding: 0.08rem 0.15rem;
-  border-radius: 0.2rem;
+  background: rgba(255,255,255,0.7);
+  padding: 0.06rem 0.12rem;
+  border-radius: 0.15rem;
 }
 
 .qiandao-reward-info .reward-gold {
@@ -1611,47 +1580,43 @@ html, body {
 }
 
 .qiandao-reward-info img {
-  width: 0.28rem;
-  height: 0.28rem;
-  margin-right: 0.05rem;
+  width: 0.22rem;
+  height: 0.22rem;
+  margin-right: 0.04rem;
 }
 
 /* 签到按钮 */
 .qiandao-btn {
-  width: 2.8rem;
-  height: 0.85rem;
+  width: 2.4rem;
+  height: 0.7rem;
   background: linear-gradient(180deg, #ffd54f 0%, #ff9800 50%, #f57c00 100%);
-  border-radius: 0.42rem;
+  border-radius: 0.35rem;
   position: absolute;
-  top: 5.9rem;
-  left: 1.9rem;
+  top: 4.8rem;
+  left: 2.1rem;
   text-align: center;
-  line-height: 0.85rem;
-  font-size: 0.35rem;
+  line-height: 0.7rem;
+  font-size: 0.3rem;
   color: #fff;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 3px 10px rgba(255, 152, 0, 0.4);
   transition: all 0.3s ease;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-  border: none;
-  letter-spacing: 2px;
 }
 
 .qiandao-btn:hover {
-  transform: scale(1.05) translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 152, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.5);
 }
 
 .qiandao-btn:active {
   transform: scale(0.98);
-  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
 }
 
 .qiandao-btn.disabled {
-  background: linear-gradient(180deg, #bdbdbd 0%, #9e9e9e 50%, #757575 100%);
+  background: linear-gradient(180deg, #bdbdbd 0%, #9e9e9e 100%);
   cursor: not-allowed;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .qiandao-btn.disabled:hover {
@@ -1659,46 +1624,38 @@ html, body {
 }
 
 .qiandao-btn.loading {
-  background: linear-gradient(180deg, #ffcc80 0%, #ffb74d 50%, #ffa726 100%);
+  background: linear-gradient(180deg, #ffcc80 0%, #ffb74d 100%);
   cursor: wait;
-  animation: loading-pulse 1s infinite;
-}
-
-@keyframes loading-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
 }
 
 /* 资产信息 */
 .qiandao-assets {
-  width: 5.8rem;
-  height: 0.55rem;
+  width: 5.6rem;
   position: absolute;
-  bottom: 0.25rem;
-  left: 0.4rem;
+  top: 5.65rem;
+  left: 0.5rem;
   display: flex;
   justify-content: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
 }
 
 .qiandao-assets .asset-item {
   display: flex;
   align-items: center;
-  background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,248,225,0.9));
-  padding: 0.08rem 0.25rem;
-  border-radius: 0.25rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,248,225,0.95));
+  padding: 0.08rem 0.2rem;
+  border-radius: 0.2rem;
   border: 1px solid #ffca28;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .qiandao-assets .asset-item img {
-  width: 0.32rem;
-  height: 0.32rem;
-  margin-right: 0.1rem;
+  width: 0.28rem;
+  height: 0.28rem;
+  margin-right: 0.08rem;
 }
 
 .qiandao-assets .asset-item span {
-  font-size: 0.24rem;
+  font-size: 0.22rem;
   color: #5d4037;
   font-weight: bold;
 }
