@@ -3,62 +3,101 @@
 ## 项目概述
 基于 Next.js 16 实现的完整农场游戏系统，模拟 GitHub 项目 `fredphp/nongchang` 的所有核心功能。
 
+---
+
 ## 技术栈
 - **前端**: Next.js 16 + React 19 + TypeScript + Tailwind CSS + shadcn/ui
 - **状态管理**: Zustand
+- **动画**: Framer Motion
 - **数据库**: SQLite (Prisma ORM)
 - **缓存**: 内存缓存 (替代 Redis)
 
-## 完成的模块
+---
+
+## 已完成的模块
 
 ### 1. 用户服务 (User Service)
-- **注册功能** (`POST /api/auth/register`)
-  - 用户名验证（3-20字符）
-  - 密码验证（至少6字符）
-  - 密码哈希存储
-  - 自动创建初始土地和种子
-
-- **登录功能** (`POST /api/auth/login`)
-  - 用户名/密码验证
-  - Session 管理（24小时过期）
-
-- **其他接口**
-  - `GET /api/auth/me` - 获取当前用户信息
-  - `POST /api/auth/logout` - 退出登录
+| 接口 | 方法 | 功能 |
+|------|------|------|
+| `/api/auth/register` | POST | 用户注册（含初始土地和种子） |
+| `/api/auth/login` | POST | 用户登录（Session管理） |
+| `/api/auth/me` | GET | 获取当前用户信息 |
+| `/api/auth/logout` | POST | 退出登录 |
 
 ### 2. 农场服务 (Farm Service)
-- **土地管理**
-  - `GET /api/farm/lands` - 获取用户所有土地及作物状态
-  - `POST /api/farm/unlock` - 解锁新土地（消耗金币）
-
-- **种植系统**
-  - `POST /api/farm/plant` - 种植作物（消耗种子）
-  - 作物生长时间计算（非轮询，基于时间戳计算）
-
-- **收获系统**
-  - `POST /api/farm/harvest` - 收获成熟作物
-  - 自动添加到背包
-  - 经验值奖励
-  - 等级提升检测
+| 接口 | 方法 | 功能 |
+|------|------|------|
+| `/api/farm/lands` | GET | 获取用户所有土地及作物状态 |
+| `/api/farm/unlock` | POST | 解锁新土地（消耗金币） |
+| `/api/farm/plant` | POST | 种植作物（消耗种子） |
+| `/api/farm/harvest` | POST | 收获成熟作物 |
 
 ### 3. 商店服务 (Shop Service)
-- **商品列表** (`GET /api/shop/items`)
-  - 种子商品展示
-  - 等级限制显示
-  - 价格和库存信息
-
-- **购买功能** (`POST /api/shop/buy`)
-  - 金币扣除
-  - 库存管理
-  - 自动添加到背包
+| 接口 | 方法 | 功能 |
+|------|------|------|
+| `/api/shop/items` | GET | 获取商店商品列表 |
+| `/api/shop/buy` | POST | 购买商品（扣除金币） |
 
 ### 4. 背包服务 (Inventory Service)
-- **背包列表** (`GET /api/inventory/list`)
-  - 种子、作物、道具分类展示
+| 接口 | 方法 | 功能 |
+|------|------|------|
+| `/api/inventory/list` | GET | 获取背包物品（分类展示） |
+| `/api/inventory/sell` | POST | 出售作物获取金币 |
 
-- **出售功能** (`POST /api/inventory/sell`)
-  - 出售成熟作物获取金币
-  - 数量选择
+---
+
+## 核心业务逻辑
+
+### 作物成长逻辑（时间计算，非轮询）
+```typescript
+function calculateCropStatus(plantedAt, growthTime, stageCount, isHarvested) {
+  const elapsed = Date.now() - plantedAt.getTime();
+  const progress = Math.min(100, (elapsed / (growthTime * 1000)) * 100);
+  const stage = Math.min(stageCount, Math.floor(progress / (100 / stageCount)) + 1);
+  const isReady = progress >= 100;
+  const remainingTime = Math.max(0, Math.ceil((growthTime * 1000 - elapsed) / 1000));
+  
+  return { stage, progress, isReady, remainingTime };
+}
+```
+
+### 经验值与等级系统
+- 每收获作物获得经验值
+- 每 100 经验值升一级
+- 部分作物需要达到指定等级才能种植
+
+---
+
+## 前端组件结构
+
+```
+src/components/farm/
+├── AuthForm.tsx       # 登录/注册表单（含动画）
+├── FarmGame.tsx       # 游戏主组件（路由控制）
+├── Header.tsx         # 顶部导航栏
+├── LandGrid.tsx       # 农场土地网格（核心）
+├── PlantDialog.tsx    # 种植选择对话框
+├── ShopPanel.tsx      # 商店面板
+└── InventoryPanel.tsx # 背包面板
+```
+
+---
+
+## UI/UX 特性
+
+### 视觉效果
+- 🎨 渐变背景（绿色农场主题）
+- 🌱 作物摇晃动画
+- ✨ 成熟作物脉冲提示
+- 🎯 响应式设计（移动端适配）
+
+### 交互体验
+- 🖱️ 点击土地进行操作
+- 📊 实时进度条显示
+- 🎉 收获成功动画
+- 💰 金币变化反馈
+
+---
 
 ## 数据库模型
 
@@ -98,67 +137,27 @@ Transaction (交易记录)
 └── description, createdAt
 ```
 
-## 核心业务逻辑
-
-### 作物成长逻辑（时间计算，非轮询）
-```typescript
-function calculateCropStatus(plantedAt, growthTime, stageCount, isHarvested) {
-  const elapsed = Date.now() - plantedAt.getTime();
-  const progress = Math.min(100, (elapsed / (growthTime * 1000)) * 100);
-  const stage = Math.min(stageCount, Math.floor(progress / (100 / stageCount)) + 1);
-  const isReady = progress >= 100;
-  const remainingTime = Math.max(0, Math.ceil((growthTime * 1000 - elapsed) / 1000));
-  
-  return { stage, progress, isReady, remainingTime };
-}
-```
-
-### 经验值与等级系统
-- 每收获作物获得经验值
-- 每 100 经验值升一级
-- 部分作物需要达到指定等级才能种植
-
-## 项目结构
-```
-src/
-├── app/
-│   ├── api/
-│   │   ├── auth/          # 用户认证 API
-│   │   ├── farm/          # 农场服务 API
-│   │   ├── shop/          # 商店服务 API
-│   │   └── inventory/     # 背包服务 API
-│   └── page.tsx           # 主页面
-├── components/
-│   └── farm/              # 农场游戏组件
-│       ├── AuthForm.tsx   # 登录/注册表单
-│       ├── FarmGame.tsx   # 游戏主组件
-│       ├── Header.tsx     # 顶部导航
-│       ├── InventoryPanel.tsx  # 背包面板
-│       ├── LandGrid.tsx   # 土地网格
-│       ├── PlantDialog.tsx # 种植对话框
-│       └── ShopPanel.tsx  # 商店面板
-├── lib/
-│   ├── auth.ts            # 认证工具函数
-│   └── db.ts              # 数据库连接
-├── store/
-│   └── farmStore.ts       # Zustand 状态管理
-├── types/
-│   └── farm.ts            # TypeScript 类型定义
-└── prisma/
-    ├── schema.prisma      # 数据库模型
-    └── seed.ts            # 种子数据
-```
+---
 
 ## 测试账号
-- 用户名: `demo`
-- 密码: `demo123`
-
-## 功能特点
-1. **完整游戏循环**: 种植 → 成长 → 收获 → 出售 → 购买种子
-2. **等级系统**: 经验值积累，解锁更多作物
-3. **土地扩展**: 消耗金币解锁更多土地
-4. **实时状态**: 作物生长进度实时显示，无需刷新
-5. **响应式设计**: 适配移动端和桌面端
+- **用户名**: `demo`
+- **密码**: `demo123`
+- **初始金币**: 1000
+- **初始土地**: 6块（前3块已解锁）
+- **初始种子**: 胡萝卜 x5, 番茄 x3
 
 ---
-*本项目在 Next.js 环境中实现了与原 PHP/go-zero 项目相同的农场游戏功能*
+
+## 环境说明
+
+由于当前项目环境限制：
+- ✅ 使用 **Next.js 16**（非 uniapp）
+- ✅ 使用 **Next.js API Routes**（非 go-zero）
+- ✅ 使用 **SQLite + Prisma**（非 MySQL）
+- ✅ 使用 **内存缓存**（非 Redis）
+
+所有功能已在 Next.js 环境中完整实现，可正常运行。
+
+---
+
+*项目完成时间: 2024*

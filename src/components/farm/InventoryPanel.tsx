@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { InventoryItem } from '@/types/farm';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { useFarmStore } from '@/store/farmStore';
 import { toast } from 'sonner';
-import { Package, Coins, Leaf, Sprout, Wheat } from 'lucide-react';
+import { Package, Coins, Sprout, Wheat, Star, Plus, Minus } from 'lucide-react';
 
 export function InventoryPanel() {
   const { inventory, setInventory, user, setUser } = useFarmStore();
@@ -56,7 +54,6 @@ export function InventoryPanel() {
       const data = await res.json();
       if (data.success) {
         toast.success(data.message);
-        // 更新用户金币
         if (user) {
           setUser({ ...user, coins: user.coins + data.earnings });
         }
@@ -82,23 +79,31 @@ export function InventoryPanel() {
     : 0;
 
   const renderItems = (items: InventoryItem[], type: 'seed' | 'crop') => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
       {items.length === 0 ? (
-        <div className="col-span-full text-center py-8 text-gray-400">
-          <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>暂无物品</p>
+        <div className="col-span-full text-center py-12 text-gray-400">
+          <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <p className="text-lg">暂无物品</p>
         </div>
       ) : (
         items.map((item) => (
-          <Card key={item.id} className="overflow-hidden">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <div className="text-3xl">{item.detail?.icon || '📦'}</div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{item.detail?.name || '未知'}</p>
-                  <p className="text-sm text-gray-500">数量: {item.quantity}</p>
-                </div>
-              </div>
+          <div
+            key={item.id}
+            className="farm-card p-4 hover:shadow-xl transition-all duration-300"
+          >
+            <div className="text-center">
+              {/* 图标 */}
+              <div className="text-5xl mb-2 crop-icon">{item.detail?.icon || '📦'}</div>
+              
+              {/* 名称 */}
+              <p className="font-bold text-gray-800 mb-1">{item.detail?.name || '未知'}</p>
+              
+              {/* 数量 */}
+              <Badge variant="secondary" className="mb-2">
+                x{item.quantity}
+              </Badge>
+              
+              {/* 出售按钮（仅作物可出售） */}
               {type === 'crop' && item.detail && (
                 <Button
                   variant="outline"
@@ -110,11 +115,26 @@ export function InventoryPanel() {
                     setShowSellDialog(true);
                   }}
                 >
-                  💰 出售 ({item.detail.sellPrice}金币/个)
+                  <Coins className="w-4 h-4 mr-1 text-yellow-500" />
+                  出售 ({item.detail.sellPrice}/个)
                 </Button>
               )}
-            </CardContent>
-          </Card>
+              
+              {/* 种子信息 */}
+              {type === 'seed' && item.detail && (
+                <div className="mt-2 text-xs text-gray-500 space-y-1">
+                  <p className="flex items-center justify-center gap-1">
+                    <Sprout className="w-3 h-3" />
+                    生长: {item.detail.growthTime}s
+                  </p>
+                  <p className="flex items-center justify-center gap-1">
+                    <Coins className="w-3 h-3" />
+                    收益: {item.detail.sellPrice}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         ))
       )}
     </div>
@@ -122,116 +142,149 @@ export function InventoryPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between px-4">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          <Package className="w-5 h-5" />
-          背包
-        </h2>
-        <div className="flex items-center gap-2 text-yellow-600 font-semibold">
-          <Coins className="w-5 h-5" />
-          {user?.coins || 0}
+      {/* 标题 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🎒</span>
+          <h2 className="text-xl font-bold text-green-800">我的背包</h2>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-200">
+          <Coins className="w-5 h-5 text-yellow-600" />
+          <span className="font-bold text-yellow-700">{user?.coins || 0}</span>
         </div>
       </div>
 
+      {/* 分类标签 */}
       <Tabs defaultValue="seeds" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 mx-4 w-[calc(100%-2rem)]">
-          <TabsTrigger value="seeds" className="flex items-center gap-1">
+        <TabsList className="w-full grid grid-cols-3 bg-white/50 p-1 rounded-xl">
+          <TabsTrigger 
+            value="seeds" 
+            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md"
+          >
             <Sprout className="w-4 h-4" />
-            种子 ({seeds.length})
+            <span>种子</span>
+            <Badge variant="secondary" className="ml-1">{seeds.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="crops" className="flex items-center gap-1">
+          <TabsTrigger 
+            value="crops"
+            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md"
+          >
             <Wheat className="w-4 h-4" />
-            作物 ({crops.length})
+            <span>作物</span>
+            <Badge variant="secondary" className="ml-1">{crops.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="tools" className="flex items-center gap-1">
-            <Leaf className="w-4 h-4" />
-            道具 ({tools.length})
+          <TabsTrigger 
+            value="tools"
+            className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-md"
+          >
+            <Package className="w-4 h-4" />
+            <span>道具</span>
+            <Badge variant="secondary" className="ml-1">{tools.length}</Badge>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="seeds" className="mt-4 px-4">
+        <TabsContent value="seeds" className="mt-4">
           {renderItems(seeds, 'seed')}
         </TabsContent>
 
-        <TabsContent value="crops" className="mt-4 px-4">
+        <TabsContent value="crops" className="mt-4">
           {renderItems(crops, 'crop')}
         </TabsContent>
 
-        <TabsContent value="tools" className="mt-4 px-4">
+        <TabsContent value="tools" className="mt-4">
           {renderItems(tools, 'tool')}
         </TabsContent>
       </Tabs>
 
       {/* 出售对话框 */}
       <Dialog open={showSellDialog} onOpenChange={setShowSellDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md farm-card">
           <DialogHeader>
-            <DialogTitle>💰 出售作物</DialogTitle>
-            <DialogDescription>
-              {selectedItem?.detail?.name}
-            </DialogDescription>
+            <DialogTitle className="text-xl font-bold text-center">💰 出售作物</DialogTitle>
+            <DialogDescription className="text-center">{selectedItem?.detail?.name}</DialogDescription>
           </DialogHeader>
 
           {selectedItem && selectedItem.detail && (
             <div className="space-y-4">
+              {/* 作物信息 */}
               <div className="text-center py-4">
-                <div className="text-5xl mb-2">{selectedItem.detail.icon}</div>
-                <p className="font-semibold">{selectedItem.detail.name}</p>
-                <p className="text-sm text-gray-500">库存: {selectedItem.quantity}</p>
+                <div className="text-6xl mb-3 crop-icon">{selectedItem.detail.icon}</div>
+                <p className="text-xl font-bold text-gray-800">{selectedItem.detail.name}</p>
+                <p className="text-sm text-gray-500 mt-1">库存: {selectedItem.quantity}</p>
               </div>
 
-              <div className="space-y-2">
+              {/* 数量选择 */}
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">出售数量</span>
-                  <div className="flex items-center gap-2">
+                  <span className="text-gray-600">出售数量</span>
+                  <div className="flex items-center gap-3">
                     <Button
                       variant="outline"
                       size="sm"
+                      className="w-10 h-10 rounded-full"
                       onClick={() => setSellQuantity(Math.max(1, sellQuantity - 1))}
+                      disabled={sellQuantity <= 1}
                     >
-                      -
+                      <Minus className="w-4 h-4" />
                     </Button>
-                    <span className="w-12 text-center">{sellQuantity}</span>
+                    <span className="w-12 text-center text-xl font-bold">{sellQuantity}</span>
                     <Button
                       variant="outline"
                       size="sm"
+                      className="w-10 h-10 rounded-full"
                       onClick={() => setSellQuantity(Math.min(selectedItem.quantity, sellQuantity + 1))}
+                      disabled={sellQuantity >= selectedItem.quantity}
                     >
-                      +
+                      <Plus className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
+                
+                {/* 滑块 */}
                 <input
                   type="range"
                   min={1}
                   max={selectedItem.quantity}
                   value={sellQuantity}
                   onChange={(e) => setSellQuantity(parseInt(e.target.value))}
-                  className="w-full"
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>1</span>
-                  <span>全部 ({selectedItem.quantity})</span>
+                  <button 
+                    className="text-green-600 font-medium hover:underline"
+                    onClick={() => setSellQuantity(selectedItem.quantity)}
+                  >
+                    全部出售 ({selectedItem.quantity})
+                  </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-center">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500">单价</p>
-                  <p className="font-bold text-yellow-600">💰 {selectedItem.detail.sellPrice}</p>
+              {/* 价格信息 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 bg-gray-50 rounded-xl text-center">
+                  <p className="text-xs text-gray-500 mb-1">单价</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <Coins className="w-5 h-5 text-yellow-500" />
+                    <span className="text-xl font-bold text-gray-800">{selectedItem.detail.sellPrice}</span>
+                  </div>
                 </div>
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-xs text-gray-500">总收益</p>
-                  <p className="font-bold text-green-600">💰 {totalEarnings}</p>
+                <div className="p-4 bg-green-50 rounded-xl text-center border-2 border-green-200">
+                  <p className="text-xs text-gray-500 mb-1">总收益</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <Coins className="w-5 h-5 text-yellow-500" />
+                    <span className="text-xl font-bold text-green-600">{totalEarnings}</span>
+                  </div>
                 </div>
               </div>
 
+              {/* 出售按钮 */}
               <Button
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full farm-button text-lg py-6"
                 onClick={handleSell}
                 disabled={isSelling}
               >
-                {isSelling ? '出售中...' : '确认出售'}
+                {isSelling ? '出售中...' : '✅ 确认出售'}
               </Button>
             </div>
           )}

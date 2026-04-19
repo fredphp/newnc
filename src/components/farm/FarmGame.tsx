@@ -9,10 +9,14 @@ import { LandGrid } from './LandGrid';
 import { PlantDialog } from './PlantDialog';
 import { ShopPanel } from './ShopPanel';
 import { InventoryPanel } from './InventoryPanel';
-import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function FarmGame() {
-  const { user, isLoggedIn, isLoading, setUser, setLoading, setLands, setSeeds, lands, seeds } = useFarmStore();
+  const { 
+    user, isLoggedIn, isLoading, setUser, setLoading, 
+    setLands, setSeeds, lands, seeds 
+  } = useFarmStore();
+  
   const [selectedLand, setSelectedLand] = useState<Land | null>(null);
   const [showPlantDialog, setShowPlantDialog] = useState(false);
 
@@ -73,11 +77,27 @@ export function FarmGame() {
   // 加载中
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
-        <div className="text-center">
-          <div className="text-6xl animate-bounce mb-4">🌾</div>
-          <p className="text-gray-500">加载中...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-emerald-200">
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center"
+        >
+          <motion.div 
+            className="text-8xl mb-4"
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            🌾
+          </motion.div>
+          <motion.p 
+            className="text-xl text-green-800 font-bold"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            加载中...
+          </motion.p>
+        </motion.div>
       </div>
     );
   }
@@ -89,30 +109,58 @@ export function FarmGame() {
 
   // 已登录
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <Header />
       
       <main className="flex-1 max-w-7xl mx-auto w-full">
         {user && (
-          <div className="p-4">
-            {useFarmStore.getState().currentView === 'farm' && (
-              <>
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-xl font-bold flex items-center gap-2">
-                    🌱 我的农场
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    已解锁 {lands.filter(l => l.isUnlocked).length}/{lands.length} 块土地
-                  </p>
-                </div>
-                <LandGrid onPlantClick={handlePlantClick} />
-              </>
-            )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={useFarmStore.getState().currentView}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="p-4"
+            >
+              {useFarmStore.getState().currentView === 'farm' && (
+                <>
+                  {/* 农场标题 */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">🌾</span>
+                      <h2 className="text-xl font-bold text-green-800">我的农场</h2>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-600">
+                      <span className="flex items-center gap-1">
+                        <span className="text-green-600 font-bold">{lands.filter(l => l.isUnlocked).length}</span>
+                        <span>/</span>
+                        <span>{lands.length}</span>
+                        <span>块土地</span>
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* 农场网格 */}
+                  <LandGrid onPlantClick={handlePlantClick} />
+                  
+                  {/* 快捷操作提示 */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="mt-4 p-4 bg-white/50 backdrop-blur rounded-xl text-center text-sm text-gray-500"
+                  >
+                    💡 点击空地种植作物，点击成熟作物进行收获
+                  </motion.div>
+                </>
+              )}
 
-            {useFarmStore.getState().currentView === 'shop' && <ShopPanel />}
+              {useFarmStore.getState().currentView === 'shop' && <ShopPanel />}
 
-            {useFarmStore.getState().currentView === 'inventory' && <InventoryPanel />}
-          </div>
+              {useFarmStore.getState().currentView === 'inventory' && <InventoryPanel />}
+            </motion.div>
+          </AnimatePresence>
         )}
       </main>
 
@@ -126,9 +174,11 @@ export function FarmGame() {
       />
 
       {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-md border-t py-3">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
-          <p>🌾 开心农场 - 种植、收获、赚钱！</p>
+      <footer className="bg-white/80 backdrop-blur-md border-t border-gray-100 py-4">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-sm text-gray-500">
+            🌾 开心农场 - 种植、收获、赚钱！
+          </p>
         </div>
       </footer>
     </div>

@@ -10,8 +10,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useFarmStore } from '@/store/farmStore';
 import { toast } from 'sonner';
+import { Sprout, Clock, Coins, Star } from 'lucide-react';
 
 interface PlantDialogProps {
   land: Land | null;
@@ -57,59 +59,88 @@ export function PlantDialog({ land, seeds, open, onOpenChange, onSuccess }: Plan
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md farm-card">
         <DialogHeader>
-          <DialogTitle>🌱 选择种子</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl font-bold text-center flex items-center justify-center gap-2">
+            <Sprout className="w-6 h-6 text-green-600" />
+            选择种子
+          </DialogTitle>
+          <DialogDescription className="text-center">
             土地 #{land?.position} - 选择要种植的作物
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {seeds.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <p className="text-4xl mb-2">📭</p>
-              <p>没有可用的种子</p>
-              <p className="text-sm">去商店购买种子吧！</p>
+            <div className="text-center py-12 text-gray-400">
+              <div className="text-6xl mb-4">📭</div>
+              <p className="text-lg">没有可用的种子</p>
+              <p className="text-sm mt-2">去商店购买种子吧！</p>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+              {/* 种子选择网格 */}
+              <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-1">
                 {seeds.map((seed) => (
-                  <Button
+                  <button
                     key={seed.id}
-                    variant={selectedSeed?.id === seed.id ? 'default' : 'outline'}
-                    className={`h-auto py-3 flex flex-col items-center ${
-                      selectedSeed?.id === seed.id ? 'bg-green-600 hover:bg-green-700' : ''
-                    }`}
                     onClick={() => setSelectedSeed(seed)}
+                    className={`
+                      p-4 rounded-xl transition-all duration-300 text-center
+                      ${selectedSeed?.id === seed.id 
+                        ? 'bg-gradient-to-br from-green-100 to-emerald-200 border-2 border-green-500 shadow-lg scale-105' 
+                        : 'bg-gray-50 hover:bg-green-50 border-2 border-transparent hover:border-green-300'}
+                    `}
                   >
-                    <span className="text-2xl mb-1">{seed.detail?.icon}</span>
-                    <span className="text-sm font-medium">{seed.detail?.name}</span>
-                    <span className="text-xs opacity-70">库存: {seed.quantity}</span>
-                  </Button>
+                    <div className="text-4xl mb-2 crop-icon">{seed.detail?.icon}</div>
+                    <p className="font-bold text-gray-800">{seed.detail?.name}</p>
+                    <Badge variant="secondary" className="mt-1">x{seed.quantity}</Badge>
+                  </button>
                 ))}
               </div>
 
+              {/* 选中种子的详情 */}
               {selectedSeed && selectedSeed.detail && (
-                <div className="p-3 bg-gray-50 rounded-lg text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">生长时间</span>
-                    <span>{selectedSeed.detail.growthTime}秒</span>
+                <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                  <div className="flex items-center gap-4">
+                    <div className="text-5xl crop-icon">{selectedSeed.detail.icon}</div>
+                    <div className="flex-1">
+                      <p className="text-lg font-bold text-green-800">{selectedSeed.detail.name}</p>
+                      {selectedSeed.detail.description && (
+                        <p className="text-sm text-gray-500 mt-1">{selectedSeed.detail.description}</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">出售价格</span>
-                    <span className="text-green-600">💰 {selectedSeed.detail.sellPrice}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">经验奖励</span>
-                    <span className="text-blue-600">✨ {selectedSeed.detail.expReward}</span>
+                  
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                    <div className="text-center p-2 bg-white rounded-lg">
+                      <p className="text-xs text-gray-500">生长时间</p>
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <Clock className="w-4 h-4 text-amber-500" />
+                        <span className="font-bold text-amber-600">{selectedSeed.detail.growthTime}s</span>
+                      </div>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded-lg">
+                      <p className="text-xs text-gray-500">出售价格</p>
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <Coins className="w-4 h-4 text-yellow-500" />
+                        <span className="font-bold text-green-600">{selectedSeed.detail.sellPrice}</span>
+                      </div>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded-lg">
+                      <p className="text-xs text-gray-500">经验奖励</p>
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <Star className="w-4 h-4 text-purple-500" />
+                        <span className="font-bold text-purple-600">{selectedSeed.detail.expReward}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
 
+              {/* 种植按钮 */}
               <Button
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full farm-button text-lg py-6"
                 onClick={handlePlant}
                 disabled={!selectedSeed || isPlanting}
               >

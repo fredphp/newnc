@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import { useFarmStore } from '@/store/farmStore';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { LogOut, Coins, Star, ShoppingCart, Package, Wheat } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,71 +31,72 @@ export function Header() {
 
   if (!user) return null;
 
+  const navItems = [
+    { id: 'farm' as const, icon: Wheat, label: '农场', emoji: '🌾' },
+    { id: 'shop' as const, icon: ShoppingCart, label: '商店', emoji: '🏪' },
+    { id: 'inventory' as const, icon: Package, label: '背包', emoji: '🎒' },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b shadow-sm">
+    <header className="farm-nav sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="text-3xl">🌾</div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="text-3xl sm:text-4xl">🌾</div>
             <div>
-              <h1 className="text-xl font-bold text-green-800">开心农场</h1>
-              <p className="text-xs text-gray-500">{user.nickname || user.username} 的农场</p>
+              <h1 className="text-lg sm:text-xl font-bold text-green-800">开心农场</h1>
+              <p className="text-xs text-gray-500 hidden sm:block">{user.nickname || user.username} 的农场</p>
             </div>
           </div>
 
           {/* 用户信息 */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* 金币 */}
-            <Badge variant="secondary" className="px-3 py-1.5 text-sm bg-yellow-100 text-yellow-800">
-              <Coins className="w-4 h-4 mr-1" />
-              {user.coins}
-            </Badge>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-200">
+              <Coins className="w-4 h-4 text-yellow-600" />
+              <span className="font-bold text-yellow-700 text-sm sm:text-base">{user.coins}</span>
+            </div>
 
             {/* 等级和经验 */}
-            <div className="hidden sm:flex items-center gap-2">
-              <Badge variant="secondary" className="px-3 py-1.5 text-sm bg-blue-100 text-blue-800">
-                <Star className="w-4 h-4 mr-1" />
-                Lv.{user.level}
-              </Badge>
+            <div className="hidden md:flex items-center gap-2">
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 border border-blue-200">
+                <Star className="w-4 h-4 text-blue-600" />
+                <span className="font-bold text-blue-700">Lv.{user.level}</span>
+              </div>
               <div className="w-24">
                 <Progress value={expProgress} className="h-2" />
               </div>
             </div>
 
             {/* 导航按钮 */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant={currentView === 'farm' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setCurrentView('farm')}
-                className={currentView === 'farm' ? 'bg-green-600 hover:bg-green-700' : ''}
-              >
-                <Wheat className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">农场</span>
-              </Button>
-              <Button
-                variant={currentView === 'shop' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setCurrentView('shop')}
-                className={currentView === 'shop' ? 'bg-green-600 hover:bg-green-700' : ''}
-              >
-                <ShoppingCart className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">商店</span>
-              </Button>
-              <Button
-                variant={currentView === 'inventory' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setCurrentView('inventory')}
-                className={currentView === 'inventory' ? 'bg-green-600 hover:bg-green-700' : ''}
-              >
-                <Package className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">背包</span>
-              </Button>
+            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+              {navItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentView(item.id)}
+                  className={`
+                    px-3 py-1.5 rounded-lg transition-all duration-300
+                    ${currentView === item.id 
+                      ? 'bg-white shadow-md text-green-700' 
+                      : 'text-gray-600 hover:bg-white/50'}
+                  `}
+                >
+                  <span className="text-lg mr-1 hidden sm:inline">{item.emoji}</span>
+                  <span className="text-sm font-medium">{item.label}</span>
+                </Button>
+              ))}
             </div>
 
             {/* 退出按钮 */}
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleLogout}
+              className="rounded-full w-9 h-9 p-0 text-gray-500 hover:text-red-500 hover:bg-red-50"
+            >
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
