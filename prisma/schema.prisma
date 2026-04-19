@@ -47,9 +47,6 @@ model User {
   
   // 关联
   userlist    Userlist?
-  userbag     Userbag[]
-  userLogs    UserLog[]
-  gameRecords GameRecord[]
 
   @@map("think_user")
 }
@@ -334,9 +331,6 @@ model Userbag {
   buy_time  DateTime? @db.DateTime      // 购买时间
   dq_time   DateTime? @db.DateTime      // 到期时间
 
-  // 关联用户
-  user      User?     @relation(fields: [userid], references: [id])
-
   @@index([userid])
   @@map("think_userbag")
 }
@@ -350,9 +344,6 @@ model UserLog {
   record    String    @db.VarChar(255)  // 记录内容
   score     Float     @default(0)       // 积分变动
   source    Int       @default(0)       // 来源: 0任务 1邀请
-
-  // 关联用户
-  user      User?     @relation(fields: [userid], references: [id])
 
   @@index([userid])
   @@map("think_user_log")
@@ -467,9 +458,6 @@ model GameRecord {
   recharge_money Int?
   fc            Int?
 
-  // 关联用户
-  user          User?     @relation(fields: [userid], references: [id])
-
   @@index([userid])
   @@map("think_game_record")
 }
@@ -504,7 +492,7 @@ model ShopCommodityList {
 // ==================== 签到记录 ====================
 model SignRecord {
   id        Int       @id @default(autoincrement())
-  userid    Int
+  userid    Int?
   username  String?   @db.VarChar(50)
   time      DateTime? @db.DateTime
   type      Int       @default(1)
@@ -545,10 +533,11 @@ model Sys {
 
 // ==================== 系统信息 ====================
 model SysInfo {
-  id        Int      @id @default(autoincrement())
+  id        Int?     @default(autoincrement())
   name      String?  @db.VarChar(255)
   value     String?  @db.Text
 
+  @@id
   @@map("think_sysinfo")
 }
 
