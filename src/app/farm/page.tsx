@@ -107,9 +107,18 @@ export default function FarmPage() {
       const res = await fetch('/api/auth/login');
       const data = await res.json();
       
+      console.log('获取用户数据响应:', data);
+      
       if (!data.success) {
+        console.log('登录已失效，跳转到登录页');
         router.push('/');
         return;
+      }
+      
+      // 如果 userlist 不存在，使用默认值
+      if (!data.userlist) {
+        console.log('用户游戏数据不存在，使用默认值');
+        data.userlist = createDefaultUserlist();
       }
       
       setUser(data);
@@ -122,12 +131,42 @@ export default function FarmPage() {
     }
   };
 
+  // 创建默认的用户游戏数据
+  const createDefaultUserlist = () => {
+    const defaultData: any = {
+      gold: '0',
+      rmb: '0',
+      zs: '0',
+      lvl: 1,
+      zhongzi: 0,
+      hetao: '0',
+      shiliu: '0',
+      hongzao: '0',
+      putao: '0',
+      hamigua: '0',
+      xiangli: '0',
+      shamoguo: '0',
+      rensheuguo: '0',
+    };
+    // 初始化12块土地
+    for (let i = 1; i <= 12; i++) {
+      defaultData[`tudi${i}`] = 0;
+      defaultData[`zt${i}`] = '-1';
+      defaultData[`kttime${i}`] = null;
+    }
+    return defaultData;
+  };
+
   // 初始化土地数据
   const initLands = (userlist: any) => {
+    if (!userlist) {
+      console.log('userlist 为空，跳过初始化');
+      return;
+    }
     const landData: LandData[] = [];
     for (let i = 1; i <= 12; i++) {
-      const status = userlist[`tudi${i}`] || 0;
-      const zt = userlist[`zt${i}`] || '-1';
+      const status = userlist[`tudi${i}`] ?? 0;
+      const zt = userlist[`zt${i}`] ?? '-1';
       const kttime = userlist[`kttime${i}`];
       
       let cropId = 0;

@@ -175,15 +175,52 @@ export async function GET() {
       });
     }
 
-    // 获取用户游戏数据
+    // 获取用户游戏数据，如果没有则创建
     let userlist = null;
     try {
-      const userListData = await db.userlist.findUnique({
+      userlist = await db.userlist.findUnique({
         where: { userid: user.id }
       });
-      userlist = userListData;
+      
+      // 如果用户没有游戏数据，创建默认数据
+      if (!userlist) {
+        console.log('用户没有游戏数据，创建默认数据:', user.id);
+        userlist = await db.userlist.create({
+          data: {
+            userid: user.id,
+            username: user.username || '',
+            gold: '1000',
+            zs: '10',
+            rmb: '0',
+            lvl: 1,
+            zhongzi: 5,
+            hetao: '0',
+            shiliu: '0',
+            hongzao: '0',
+            putao: '0',
+            hamigua: '0',
+            xiangli: '0',
+            shamoguo: '0',
+            rensheuguo: '0',
+            // 初始化12块土地状态
+            tudi1: 1, zt1: '-1',  // 第一块土地已开垦
+            tudi2: 0, zt2: '-1',
+            tudi3: 0, zt3: '-1',
+            tudi4: 0, zt4: '-1',
+            tudi5: 0, zt5: '-1',
+            tudi6: 0, zt6: '-1',
+            tudi7: 0, zt7: '-1',
+            tudi8: 0, zt8: '-1',
+            tudi9: 0, zt9: '-1',
+            tudi10: 0, zt10: '-1',
+            tudi11: 0, zt11: '-1',
+            tudi12: 0, zt12: '-1',
+          }
+        });
+        console.log('已创建默认游戏数据');
+      }
     } catch (e) {
-      console.error('获取 userlist 失败:', e);
+      console.error('获取/创建 userlist 失败:', e);
     }
 
     console.log('返回用户数据:', { 
