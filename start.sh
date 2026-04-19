@@ -86,8 +86,20 @@ install_dependencies() {
 init_database() {
     print_info "检查数据库..."
     
-    if [ ! -f "prisma/dev.db" ]; then
+    # 确保 db 目录存在
+    if [ ! -d "db" ]; then
+        print_info "创建数据库目录..."
+        mkdir -p db
+    fi
+    
+    if [ ! -f "db/custom.db" ]; then
         print_info "正在初始化数据库..."
+        
+        # 先生成 Prisma Client
+        print_info "生成 Prisma Client..."
+        bun run db:generate
+        
+        # 推送数据库结构
         bun run db:push
         if [ $? -eq 0 ]; then
             print_success "数据库初始化完成"
@@ -98,10 +110,15 @@ init_database() {
                 bun run prisma/seed.ts 2>/dev/null || true
             fi
         else
-            print_warning "数据库初始化跳过（可能已存在）"
+            print_error "数据库初始化失败"
+            return 1
         fi
     else
         print_success "数据库已存在"
+        
+        # 确保 Prisma Client 是最新的
+        print_info "检查 Prisma Client..."
+        bun run db:generate
     fi
 }
 
