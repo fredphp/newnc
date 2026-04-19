@@ -533,11 +533,10 @@ model Sys {
 
 // ==================== 系统信息 ====================
 model SysInfo {
-  id        Int?     @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String?  @db.VarChar(255)
   value     String?  @db.Text
 
-  @@id
   @@map("think_sysinfo")
 }
 
