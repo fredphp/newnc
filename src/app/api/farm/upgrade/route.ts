@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getSession } from '@/lib/session-store';
 
 // 获取当前用户ID
 async function getCurrentUserId(request: NextRequest): Promise<number | null> {
-  // 从cookie获取用户ID
-  const userIdCookie = request.cookies.get('userId');
-  if (userIdCookie) {
-    return parseInt(userIdCookie.value);
-  }
-  
-  // 尝试从全局会话获取
-  const globalThisAny = globalThis as any;
-  if (globalThisAny.currentUserId) {
-    return globalThisAny.currentUserId;
+  // 从cookie获取session token
+  const sessionToken = request.cookies.get('session_token');
+  if (sessionToken) {
+    const session = getSession(sessionToken.value);
+    if (session) {
+      return session.userId;
+    }
   }
   
   return null;
