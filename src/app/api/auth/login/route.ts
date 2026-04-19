@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
+import { verifyVcode } from '@/lib/vcode-store';
 
 // 简单的会话存储（生产环境应使用 Redis 等）
 const sessions = new Map<string, { userId: number; username: string }>();
-
-// 验证码存储（与 vcode API 共享）
-const vcodeStore = new Map<string, { code: string; expiresAt: number }>();
 
 // 密码加密函数 - 匹配原项目 MD5(password + password)
 function encryptPassword(password: string): string {
@@ -18,24 +16,6 @@ function encryptPassword(password: string): string {
 // 生成会话 token
 function generateToken(): string {
   return crypto.randomBytes(32).toString('hex');
-}
-
-// 验证验证码
-function verifyVcode(vcodeId: string, code: string): boolean {
-  const stored = vcodeStore.get(vcodeId);
-  if (!stored) return false;
-  
-  if (stored.expiresAt < Date.now()) {
-    vcodeStore.delete(vcodeId);
-    return false;
-  }
-
-  const isValid = stored.code === code;
-  if (isValid) {
-    vcodeStore.delete(vcodeId); // 验证后删除
-  }
-  
-  return isValid;
 }
 
 export async function POST(request: NextRequest) {
@@ -54,17 +34,31 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 验证验证码（如果提供了的话）
-    if (vcode) {
-      const cookieStore = await cookies();
-      const vcodeId = cookieStore.get('vcode_id')?.value;
-      
-      if (!vcodeId || !verifyVcode(vcodeId, vcode)) {
-        return NextResponse.json({
-          success: false,
-          message: '验证码错误或已过期'
-        });
-      }
+    // 验证验证码
+    const cookieStore = await cookies();
+    const vcodeId = cookieStore.get('vcode_id')?.value;
+    
+    console.log('登录验证码检查:', { vcodeId, vcode, hasVcodeId: !!vcodeId });
+    
+    if (!vcodeId) {
+      return NextResponse.json({
+        success: false,
+        message: '请先获取验证码'
+      });
+    }
+    
+    if (!vcode) {
+      return NextResponse.json({
+        success: false,
+        message: '请输入验证码'
+      });
+    }
+    
+    if (!verifyVcode(vcodeId, vcode)) {
+      return NextResponse.json({
+        success: false,
+        message: '验证码错误或已过期'
+      });
     }
 
     // 查找用户
@@ -116,12 +110,12 @@ export async function POST(request: NextRequest) {
     });
 
     // 设置 cookie
-    const cookieStore = await cookies();
     cookieStore.set('session_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 天
+      maxAge: 60 * 60 * 24 * 7, // 7 天
+      path: '/',
     });
 
     return NextResponse.json({

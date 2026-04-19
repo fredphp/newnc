@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-
-// 简单的验证码存储（生产环境应使用 Redis）
-const vcodeStore = new Map<string, { code: string; expiresAt: number }>();
+import { storeVcode, cleanExpiredVcodes } from '@/lib/vcode-store';
 
 // 生成随机验证码
 function generateCode(length: number = 4): string {
@@ -65,17 +63,10 @@ export async function GET() {
     const vcodeId = generateVcodeId();
     
     // 存储验证码，5分钟过期
-    vcodeStore.set(vcodeId, {
-      code,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-    });
+    storeVcode(vcodeId, code, 5 * 60 * 1000);
 
     // 清理过期验证码
-    for (const [key, value] of vcodeStore.entries()) {
-      if (value.expiresAt < Date.now()) {
-        vcodeStore.delete(key);
-      }
-    }
+    cleanExpiredVcodes();
 
     // 创建 SVG 图片
     const svg = createVcodeImage(code);
@@ -91,10 +82,13 @@ export async function GET() {
     // 设置验证码 ID cookie
     response.cookies.set('vcode_id', vcodeId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // 开发环境设为 false
       sameSite: 'lax',
       maxAge: 5 * 60, // 5分钟
+      path: '/',
     });
+
+    console.log('验证码已生成:', { vcodeId, code });
 
     return response;
   } catch (error) {
@@ -102,24 +96,3 @@ export async function GET() {
     return new NextResponse('Error', { status: 500 });
   }
 }
-
-// 验证验证码的函数（供其他 API 使用）
-export function verifyVcode(vcodeId: string, code: string): boolean {
-  const stored = vcodeStore.get(vcodeId);
-  if (!stored) return false;
-  
-  if (stored.expiresAt < Date.now()) {
-    vcodeStore.delete(vcodeId);
-    return false;
-  }
-
-  const isValid = stored.code === code;
-  if (isValid) {
-    vcodeStore.delete(vcodeId); // 验证后删除
-  }
-  
-  return isValid;
-}
-
-// 导出验证码存储供 login API 使用
-export { vcodeStore };
