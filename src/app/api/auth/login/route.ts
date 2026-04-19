@@ -194,6 +194,7 @@ export async function GET() {
             rmb: '0',
             lvl: 1,
             zhongzi: 5,
+            fangwu: 1,  // 房屋等级默认为1
             hetao: '0',
             shiliu: '0',
             hongzao: '0',
@@ -203,8 +204,10 @@ export async function GET() {
             shamoguo: '0',
             rensheuguo: '0',
             // 初始化12块土地状态
-            tudi1: 1, zt1: '-1',  // 第一块土地已开垦
-            tudi2: 0, zt2: '-1',
+            // tudi: 0=未开垦(灰色), 1=已开垦(亮色)
+            // zt: -1=未开垦, 0=空地可播种, 1=已播种, 2=枯萎
+            tudi1: 1, zt1: '0',   // 第一块土地已开垦，空地
+            tudi2: 0, zt2: '-1',  // 未开垦
             tudi3: 0, zt3: '-1',
             tudi4: 0, zt4: '-1',
             tudi5: 0, zt5: '-1',

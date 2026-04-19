@@ -10,6 +10,7 @@ interface UserlistData {
   zs: string;
   lvl: number;
   zhongzi: number;
+  fangwu: number;  // 房屋等级
   hetao: string;
   shiliu: string;
   hongzao: string;
@@ -96,6 +97,7 @@ export default function FarmPage() {
       }
       
       setUser(data);
+      console.log('用户数据:', data);
     } catch (error) {
       console.error('获取用户数据失败:', error);
       router.push('/');
@@ -106,13 +108,16 @@ export default function FarmPage() {
 
   const createDefaultUserlist = (): UserlistData => {
     const data: any = {
-      gold: '1000', zs: '10', rmb: '0', lvl: 1, zhongzi: 5,
+      gold: '1000', zs: '10', rmb: '0', lvl: 1, zhongzi: 5, fangwu: 1,
       hetao: '0', shiliu: '0', hongzao: '0', putao: '0',
       hamigua: '0', xiangli: '0', shamoguo: '0', rensheuguo: '0',
     };
+    // 初始化12块土地状态
+    // tudi: 0=未开垦(灰色), 1=已开垦(亮色)
+    // zt: -1=未开垦, 0=空地可播种, 1=已播种, 2=枯萎
     for (let i = 1; i <= 12; i++) {
       data[`tudi${i}`] = i === 1 ? 1 : 0;
-      data[`zt${i}`] = '-1';
+      data[`zt${i}`] = i === 1 ? '0' : '-1';
       data[`kttime${i}`] = null;
     }
     return data;
@@ -125,6 +130,11 @@ export default function FarmPage() {
 
   const handleLandClick = (index: number) => {
     setActiveLand(activeLand === index ? null : index);
+  };
+
+  // 获取房屋等级
+  const getFangwu = () => {
+    return user?.userlist?.fangwu || 1;
   };
 
   if (loading) {
@@ -144,8 +154,14 @@ export default function FarmPage() {
       <div className="sicoZhezhao"></div>
       <div id="mengban" style={{ display: 'none' }}></div>
       
-      {/* 大房子 */}
-      <div className="BigHouse animated"></div>
+      {/* 大房子 - 根据房屋等级显示不同图片 */}
+      <div 
+        className="BigHouse animated" 
+        style={{ 
+          background: `url(/images/house_list/${getFangwu()}.png)`,
+          backgroundSize: 'cover'
+        }}
+      ></div>
       {/* 小房子 */}
       <div className="SmallHouse animated"></div>
 
@@ -194,15 +210,22 @@ export default function FarmPage() {
       <div className="easteBox">
         <ul className="easte">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => {
-            const tudi = user?.userlist?.[`tudi${i}`] ?? (i === 1 ? 1 : 0);
-            const zt = user?.userlist?.[`zt${i}`] ?? '-1';
+            // tudi: 0=未开垦(灰色土地), 1=已开垦(亮色土地)
+            // zt: -1=未开垦状态, 0=空地可播种, 1=已播种, 2=枯萎
+            const tudi = user?.userlist?.[`tudi${i}`];
+            const zt = user?.userlist?.[`zt${i}`];
             const isActive = activeLand === i;
+            
+            // 根据土地状态决定显示哪个图片
+            // 如果 zt 是 -1（未开垦），显示 tudi0.png（灰色土地）
+            // 否则显示 tudi1.png（已开垦的亮色土地）
+            const tudiImage = zt === '-1' ? 0 : (tudi || 1);
             
             return (
               <li 
                 key={i} 
                 style={{ 
-                  background: `url(/images/tudi/tudi${tudi}.png)`, 
+                  background: `url(/images/tudi/tudi${tudiImage}.png)`, 
                   backgroundSize: 'cover' 
                 }}
                 onClick={() => handleLandClick(i)}
@@ -350,7 +373,7 @@ export default function FarmPage() {
             <img src="/picture/bj.jpg" alt="头像" />
             <p>{user?.username}</p>
             <p>ID: {user?.id}</p>
-            <p>lv:{user?.userlist?.lvl || 1}</p>
+            <p>lv:{getFangwu()}</p>
             <p>{user?.userlist?.gold || '0'} 金币</p>
           </div>
         </div>
@@ -370,7 +393,7 @@ export default function FarmPage() {
                 <div className="paihangMes">
                   <div>1</div>
                   <div>{user?.username}</div>
-                  <div>{user?.userlist?.lvl || 1}</div>
+                  <div>{getFangwu()}</div>
                   <div>{user?.userlist?.gold || '0'}</div>
                 </div>
               </div>
