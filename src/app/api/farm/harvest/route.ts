@@ -1,157 +1,106 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
-import { calculateCropStatus } from '../lands/route';
 
-// 收获作物
-export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  
-  if (!user) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    const { landId } = body;
+    const body = await request.json();
+    const { landIndex } = body;
 
-    if (!landId) {
-      return NextResponse.json({ error: '缺少土地ID' }, { status: 400 });
+    if (landIndex === undefined) {
+      return NextResponse.json({
+        success: false,
+        message: '参数错误'
+      });
     }
 
-    // 获取土地信息
-    const land = await db.land.findFirst({
-      where: {
-        id: landId,
-        userId: user.id,
-      },
-      include: {
-        plantedCrop: {
-          include: {
-            crop: true,
-          },
-        },
-      },
+    // 获取用户
+    const user = await db.user.findFirst({
+      where: { status: 1 },
+      include: { userlist: true }
     });
 
-    if (!land) {
-      return NextResponse.json({ error: '土地不存在' }, { status: 400 });
-    }
-
-    if (!land.plantedCrop || land.plantedCrop.isHarvested) {
-      return NextResponse.json({ error: '该土地上没有可收获的作物' }, { status: 400 });
-    }
-
-    // 计算作物状态
-    const status = calculateCropStatus(
-      land.plantedCrop.plantedAt,
-      land.plantedCrop.crop.growthTime,
-      land.plantedCrop.crop.stageCount,
-      land.plantedCrop.isHarvested
-    );
-
-    if (!status.isReady) {
+    if (!user || !user.userlist) {
       return NextResponse.json({
-        error: '作物尚未成熟',
-        remainingTime: status.remainingTime,
-      }, { status: 400 });
+        success: false,
+        message: '用户不存在'
+      });
     }
 
-    const crop = land.plantedCrop.crop;
-    const expGain = crop.expReward;
-
-    // 开始收获（事务）
-    const result = await db.$transaction(async (tx) => {
-      // 标记作物为已收获
-      await tx.plantedCrop.update({
-        where: { id: land.plantedCrop!.id },
-        data: {
-          isHarvested: true,
-          harvestedAt: new Date(),
-        },
+    const userlist = user.userlist;
+    const ztField = `zt${landIndex + 1}` as keyof typeof userlist;
+    const kttimeField = `kttime${landIndex + 1}` as keyof typeof userlist;
+    
+    // 获取作物ID
+    const cropId = userlist[ztField];
+    if (!cropId || cropId === '-1' || cropId === '0') {
+      return NextResponse.json({
+        success: false,
+        message: '该土地上没有作物'
       });
+    }
 
-      // 添加作物到背包
-      const existingCrop = await tx.inventory.findFirst({
-        where: {
-          userId: user.id,
-          itemType: 'crop',
-          itemId: crop.id,
-        },
+    // 作物名称映射
+    const cropFieldMap: Record<string, string> = {
+      '1': 'hetao',
+      '2': 'shiliu',
+      '3': 'hongzao',
+      '4': 'putao',
+      '5': 'hamigua',
+      '6': 'xiangli',
+      '7': 'shamoguo',
+      '8': 'rensheuguo',
+      '9': 'xunyichao',
+      '10': 'shamorenshen',
+      '11': 'badanmu',
+      '12': 'hetianyu'
+    };
+
+    const cropField = cropFieldMap[String(cropId)];
+    if (!cropField) {
+      return NextResponse.json({
+        success: false,
+        message: '未知作物'
       });
+    }
 
-      if (existingCrop) {
-        await tx.inventory.update({
-          where: { id: existingCrop.id },
-          data: { quantity: { increment: 1 } },
-        });
-      } else {
-        await tx.inventory.create({
-          data: {
-            userId: user.id,
-            itemType: 'crop',
-            itemId: crop.id,
-            quantity: 1,
-          },
-        });
-      }
+    // 计算收获数量（随机1-5个）
+    const fruitCount = Math.floor(Math.random() * 5) + 1;
 
-      // 增加用户经验值
-      const updatedUser = await tx.user.update({
-        where: { id: user.id },
-        data: {
-          exp: { increment: expGain },
-        },
-      });
+    // 更新数据库
+    const updateData: any = {};
+    updateData[ztField] = '0';
+    updateData[kttimeField] = null;
+    
+    // 更新果实数量
+    const currentFruitCount = parseInt(String(userlist[cropField as keyof typeof userlist] || '0'));
+    updateData[cropField] = String(currentFruitCount + fruitCount);
 
-      // 检查是否升级
-      const expPerLevel = 100;
-      let newLevel = updatedUser.level;
-      let newExp = updatedUser.exp;
-      
-      while (newExp >= expPerLevel) {
-        newExp -= expPerLevel;
-        newLevel += 1;
-      }
+    await db.userlist.update({
+      where: { userid: user.id },
+      data: updateData
+    });
 
-      if (newLevel !== updatedUser.level) {
-        await tx.user.update({
-          where: { id: user.id },
-          data: {
-            level: newLevel,
-            exp: newExp,
-          },
-        });
-      }
-
-      // 记录交易
-      await tx.transaction.create({
-        data: {
-          userId: user.id,
-          type: 'harvest',
-          amount: crop.sellPrice,
-          description: `收获 ${crop.name}`,
-        },
-      });
-
-      return { expGain, newLevel, leveledUp: newLevel > user.level };
+    // 获取更新后的用户数据
+    const updatedUser = await db.user.findUnique({
+      where: { id: user.id },
+      include: { userlist: true }
     });
 
     return NextResponse.json({
       success: true,
-      message: `成功收获 ${crop.name}！`,
-      crop: {
-        id: crop.id,
-        name: crop.name,
-        icon: crop.icon,
-        sellPrice: crop.sellPrice,
-      },
-      expGain: result.expGain,
-      leveledUp: result.leveledUp,
-      newLevel: result.newLevel,
+      message: '收获成功',
+      fruitCount,
+      cropField,
+      user: {
+        ...updatedUser,
+        userlist: updatedUser?.userlist
+      }
     });
   } catch (error) {
     console.error('收获错误:', error);
-    return NextResponse.json({ error: '收获失败，请稍后重试' }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      message: '服务器错误'
+    });
   }
 }

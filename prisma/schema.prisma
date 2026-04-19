@@ -1,5 +1,5 @@
-// 开心农场 - 匹配原项目数据库结构
-// 基于 https://github.com/fredphp/nongchang.git
+// 开心农场 - 完全匹配原项目数据库结构
+// 基于 https://github.com/fredphp/nongchang.git 的 sql/shujuku.sql
 
 generator client {
   provider = "prisma-client-js"
@@ -10,10 +10,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==================== 管理员表 ====================
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(32)
+  loginip   String   @db.Char(15)
+  logintime Int
+  lock      Int      @default(0)
+
+  @@map("think_admin")
+}
+
 // ==================== 用户表 ====================
 model User {
   id          Int       @id @default(autoincrement())
-  username    String?   @db.VarChar(50)
+  username    String?   @db.Text
   password    String    @default("") @db.VarChar(50)
   nickname    String?   @db.VarChar(255)
   phone       String?   @db.VarChar(50)
@@ -24,32 +36,38 @@ model User {
   idcard      String?   @db.VarChar(255)
   regtime     DateTime? @db.DateTime
   logtime     DateTime? @db.DateTime
-  lognum      Int?      @default(1)
+  lognum      Int?
   logip       String?   @db.VarChar(255)
   RegIP       String?   @db.VarChar(50)
   status      Int?      @default(1)
   remark      String?   @db.VarChar(50)
-  upxianid    Int?      @default(0)
+  upxianid    Int?
   upxianuser  String?   @db.VarChar(50)
+  UserEndsNum Int?
   
   // 关联
   userlist    Userlist?
   userbag     Userbag[]
   userLogs    UserLog[]
+  gameRecords GameRecord[]
 
   @@map("think_user")
 }
 
-// ==================== 用户游戏数据表 ====================
+// ==================== 用户游戏数据表 (核心表) ====================
 model Userlist {
   ID            Int       @id @default(autoincrement())
   userid        Int       @unique
   username      String?   @db.VarChar(50)
+  password      String?   @db.VarChar(255)
+  
+  // 基础属性
   zhongzi       Int       @default(0)    // 种子数量
   gold          String    @default("0")  @db.VarChar(10)  // 金币
   rmb           String    @default("0")  @db.VarChar(10)  // 人民币
   lvl           Int       @default(1)    // 等级
   zs            String    @default("0")  @db.VarChar(10)  // 钻石
+  dong          String    @default("0")  @db.VarChar(10)  // 冻结
   
   // 12块土地状态 (-1=未开垦, 0=空地, 1-12=种植的作物ID)
   zt1           String    @default("-1") @db.VarChar(11)
@@ -65,19 +83,117 @@ model Userlist {
   zt11          String    @default("-1") @db.VarChar(10)
   zt12          String    @default("-1") @db.VarChar(10)
   
+  // 土地开垦状态 (0=未开垦, 1=已开垦)
+  tudi1         Int       @default(0)
+  tudi2         Int       @default(0)
+  tudi3         Int       @default(0)
+  tudi4         Int       @default(0)
+  tudi5         Int       @default(0)
+  tudi6         Int       @default(0)
+  tudi7         Int       @default(0)
+  tudi8         Int       @default(0)
+  tudi9         Int       @default(0)
+  tudi10        Int       @default(0)
+  tudi11        Int       @default(0)
+  tudi12        Int       @default(0)
+  
   // 各块土地的开垦/种植时间
   kttime1       DateTime? @db.DateTime
   kttime2       DateTime? @db.DateTime
   kttime3       DateTime? @db.DateTime
-  kttime4       DateTime? @db.DateTime
-  kttime5       DateTime? @db.DateTime
-  kttime6       DateTime? @db.DateTime
-  kttime7       DateTime? @db.DateTime
-  kttime8       DateTime? @db.DateTime
-  kttime9       DateTime? @db.DateTime
-  kttime10      DateTime? @db.DateTime
-  kttime11      DateTime? @db.DateTime
-  kttime12      DateTime? @db.DateTime
+  kttime4       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  kttime5       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  kttime6       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  kttime7       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  kttime8       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  kttime9       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  kttime10      DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  kttime11      DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  kttime12      DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  
+  // 土地果实数量
+  land_gs1      String?   @default("0") @db.VarChar(10)
+  land_gs2      String?   @default("0") @db.VarChar(10)
+  land_gs3      String?   @default("0") @db.VarChar(10)
+  land_gs4      String?   @default("0") @db.VarChar(10)
+  land_gs5      String?   @default("0") @db.VarChar(10)
+  land_gs6      String?   @db.VarChar(10)
+  land_gs7      String?   @default("0") @db.VarChar(10)
+  land_gs8      String?   @default("0") @db.VarChar(10)
+  land_gs9      String?   @default("0") @db.VarChar(10)
+  land_gs10     String?   @default("0") @db.VarChar(10)
+  land_gs11     String?   @default("0") @db.VarChar(10)
+  land_gs12     String?   @default("0") @db.VarChar(10)
+  
+  // 种植次数
+  zz_count1     String?   @default("0") @db.VarChar(10)
+  zz_count2     String?   @default("0") @db.VarChar(10)
+  zz_count3     String?   @default("0") @db.VarChar(10)
+  zz_count4     Int       @default(0)
+  zz_count5     Int       @default(0)
+  zz_count6     Int       @default(0)
+  zz_count7     Int       @default(0)
+  zz_count8     Int       @default(0)
+  zz_count9     Int       @default(0)
+  zz_count10    Int       @default(0)
+  zz_count11    Int       @default(0)
+  zz_count12    Int       @default(0)
+  
+  // 加速次数
+  js1           Int       @default(0)
+  js2           Int       @default(0)
+  js3           Int       @default(0)
+  js4           Int       @default(0)
+  js5           Int       @default(0)
+  js6           Int       @default(0)
+  js7           Int       @default(0)
+  js8           Int       @default(0)
+  js9           Int       @default(0)
+  js10          Int       @default(0)
+  js11          Int       @default(0)
+  js12          Int       @default(0)
+  
+  // 施肥次数
+  sf1           Int       @default(0)
+  sf2           Int       @default(0)
+  sf3           Int       @default(0)
+  sf4           Int       @default(0)
+  sf5           Int       @default(0)
+  sf6           Int       @default(0)
+  sf7           Int       @default(0)
+  sf8           Int       @default(0)
+  sf9           Int       @default(0)
+  sf10          Int       @default(0)
+  sf11          Int       @default(0)
+  sf12          Int       @default(0)
+  
+  // 除草次数
+  sc1           Int       @default(0)
+  sc2           Int       @default(0)
+  sc3           Int       @default(0)
+  sc4           Int       @default(0)
+  sc5           Int       @default(0)
+  sc6           Int       @default(0)
+  sc7           Int       @default(0)
+  sc8           Int       @default(0)
+  sc9           Int       @default(0)
+  sc10          Int       @default(0)
+  sc11          Int       @default(0)
+  sc12          Int       @default(0)
+  
+  // 除虫次数
+  cc1           Int       @default(0)
+  cc2           Int       @default(0)
+  cc3           Int       @default(0)
+  cc4           Int       @default(0)
+  cc5           Int       @default(0)
+  cc6           Int       @default(0)
+  cc7           Int       @default(0)
+  cc8           Int       @default(0)
+  cc9           Int       @default(0)
+  cc10          Int       @default(0)
+  cc11          Int       @default(0)
+  cc12          Int       @default(0)
   
   // 各种作物的收获数量
   hetao         String    @default("0") @db.VarChar(11)   // 核桃
@@ -87,19 +203,107 @@ model Userlist {
   shamoguo      String    @default("0") @db.VarChar(11)   // 沙漠果
   shiliu        String    @default("0") @db.VarChar(11)   // 石榴
   xiangli       String    @default("0") @db.VarChar(11)   // 香梨
-  rensheuguo    String    @default("0") @db.VarChar(11)   // 人参果
+  rensheuguo    String    @default("0") @db.VarChar(11)   // 人参果 (原字段名 rensheuguo)
+  xunyichao     String    @default("0") @db.VarChar(11)   // 薰衣草
+  shamorenshen  String    @default("0") @db.VarChar(11)   // 沙漠人参
+  badanmu       String    @default("0") @db.VarChar(11)   // 巴旦木
+  hetianyu      String    @default("0") @db.VarChar(11)   // 和田玉
   
-  // 其他字段
+  // 预计收益果实
+  yj_hetao      String?   @db.VarChar(8)
+  yj_shiliu     String?   @db.VarChar(8)
+  yj_hongzao    String?   @db.VarChar(8)
+  yj_putao      String?   @db.VarChar(8)
+  yj_hamigua    String?   @db.VarChar(8)
+  yj_xiangli    String?   @db.VarChar(8)
+  yj_shamoguo   String?   @db.VarChar(8)
+  yj_rensheuguo String?   @db.VarChar(8)
+  yj_xunyichao  String?   @db.VarChar(8)
+  yj_shamorenshen String? @db.VarChar(8)
+  yj_badanmu    String?   @db.VarChar(8)
+  yj_hetianyu   String?   @db.VarChar(8)
+  
+  // 道具
+  chutou        String    @default("10") @db.VarChar(11)  // 锄头
+  jinyan        String    @default("0") @db.VarChar(10)   // 金眼
+  muban         Int       @default(0)    // 木板
+  shitou        Int       @default(0)    // 石头
+  gangchai      Int       @default(0)    // 钢材
+  
+  // 宝石
+  lvbaoshi      Int       @default(0)    // 绿宝石
+  shashuihu     Int       @default(0)    // 杀水壶
+  yinbaoxiang   Int       @default(0)    // 银宝箱
+  chuchaoji     Int       @default(0)    // 除草剂
+  shichaosx     Int       @default(0)    // 虫草生长剂
+  tuchongsx     Int       @default(0)    // 土虫生长剂
+  yulusx        Int       @default(0)    // 雨露生长剂
+  zhhibaoshi    Int       @default(0)    // 智慧宝石
+  lanbaoshi     Int       @default(0)    // 蓝宝石
+  huangbaoshi   Int       @default(0)    // 黄宝石
+  fengshousx    Int       @default(0)    // 丰收生长剂
+  
+  // 背景解锁
+  bg1           Int       @default(1)
+  bg2           Int       @default(0)
+  bg3           Int       @default(0)
+  
+  // 狗粮
+  ptgouliang    String    @default("0") @db.VarChar(11)   // 普通狗粮
+  gaojigouliang String    @default("0") @db.VarChar(11)   // 高级狗粮
+  gongjigouliang String   @default("0") @db.VarChar(11)   // 公鸡狗粮
+  fygouliang    String    @default("0") @db.VarChar(11)   // 飞雁狗粮
+  sdgouliang    String    @default("0") @db.VarChar(11)   // 闪电狗粮
+  xygouliang    String    @default("0") @db.VarChar(11)   // 喜羊羊狗粮
+  smgouliang    String    @default("0") @db.VarChar(11)   // 三毛狗粮
+  
+  // 其他道具
+  chuchongji    String    @default("0") @db.VarChar(11)   // 除虫剂
+  tongbaox      String    @default("0") @db.VarChar(11)   // 铜宝箱
+  yinbaox       String    @default("0") @db.VarChar(11)   // 银宝箱
+  jinbaox       String    @default("0") @db.VarChar(11)   // 金宝箱
+  zhibaoshi     String    @default("0") @db.VarChar(11)   // 智慧石
+  dhzs          String    @default("0") @db.VarChar(11)   // 兑换钻石
+  
+  // 自动功能
+  autoshou      Int       @default(0)    // 自动收获
+  autoshou_kttime DateTime? @db.DateTime
+  autobozong    Int       @default(0)    // 自动播种
+  autobozong_kttime DateTime? @db.DateTime
+  
+  // 房屋
+  fangwu        Int       @default(1)    // 房屋等级
+  
+  // 其他
+  youjifei      Int       @default(0)    // 有机肥
   logtime       DateTime? @db.DateTime
   lognum        Int       @default(1)
   islogin       String    @default("1") @db.VarChar(10)
   sign          Int       @default(0)
   sign_time     DateTime? @db.DateTime
   jypwd         String?   @db.VarChar(11)  // 交易密码
+  qq            String?   @db.VarChar(20)
+  upxianname    String?   @db.VarChar(8)
+  upxianid      Int       @default(0)
+  upxianuser    String?   @db.VarChar(10)
+  
+  zfb           String    @default("0") @db.VarChar(20)
+  weixin        String    @default("0") @db.VarChar(20)
+  phone         String    @default("0") @db.VarChar(20)
+  
+  pay_zt        Int       @default(1)
+  status        Int       @default(1)
+  
+  // 生长剂开启时间
+  shichaosx_kttime  DateTime? @db.DateTime
+  tuchongsx_kttime  DateTime? @db.DateTime
+  yulusx_kttime     DateTime? @db.DateTime
+  fengshousx_kttime DateTime? @db.DateTime
   
   // 关联
   user          User      @relation(fields: [userid], references: [id])
 
+  @@index([userid])
   @@map("think_userlist")
 }
 
@@ -109,11 +313,11 @@ model CropsList {
   crops_name        String?  @db.VarChar(255)   // 作物名称
   crops_identifier  String?  @db.VarChar(255)   // 标识符
   crops_land_count  Int?                        // 种植数量
-  crops_harvest     String?  @db.VarChar(255)   // 收获时间
+  crops_harvest     String?  @db.VarChar(255)   // 收获时间(小时)
   crops_probability String?  @db.VarChar(255)   // 收获概率
-  crops_seed        String?  @db.VarChar(255)   // 种子价格
-  crops_sprout      String?  @db.VarChar(255)   // 发芽时间
-  crops_grow        String?  @db.VarChar(255)   // 生长时间
+  crops_seed        String?  @db.VarChar(255)   // 种子阶段时间
+  crops_sprout      String?  @db.VarChar(255)   // 发芽阶段时间
+  crops_grow        String?  @db.VarChar(255)   // 生长阶段时间
   crops_open_price  String?  @db.VarChar(255)   // 开垦价格
   name              String?  @db.VarChar(255)   // 英文名
 
@@ -138,12 +342,134 @@ model UserLog {
   id        Int       @id @default(autoincrement())
   userid    Int
   username  String?   @db.VarChar(50)
-  time      Int                     // 记录时间
+  time      Int                     // 记录时间戳
   record    String    @db.VarChar(255)  // 记录内容
   score     Float     @default(0)       // 积分变动
   source    Int       @default(0)       // 来源: 0任务 1邀请
 
   @@map("think_user_log")
+}
+
+// ==================== 游戏配置 ====================
+model GameConfig {
+  id                            Int      @id @default(autoincrement())
+  config_till_price             Int?
+  config_eradicate_price        Int?
+  config_seed_count             Int?
+  config_sign_in                Int?
+  config_register_reward        Int?
+  config_steal_count            Int?
+  config_pest_time              String?  @db.VarChar(11) @default("0.1")
+  config_pest_odds              Int      @default(20)
+  config_pest_reduce            Int      @default(5)
+  config_drought_time           String?  @db.VarChar(10) @default("0.1")
+  config_drought_odds           Int      @default(20)
+  config_drought_reduce         Int      @default(8)
+  config_weed_time              Int      @default(5)
+  config_weed_odds              Int      @default(5)
+  config_weed_reduce            Int      @default(5)
+  config_weed_time2             Int      @default(5)
+  config_weed_odds2             Int      @default(5)
+  config_weed_reduce2           Int      @default(5)
+  config_weed_time3             Int      @default(5)
+  config_copperhoe_seed         Int      @default(3)
+  config_silverhoe_seed         Int      @default(8)
+  config_bumper_count           Int      @default(5)
+  config_reborn_odds            Int      @default(20)
+  config_reborn_cost            Int      @default(10)
+  config_give_cost              Int      @default(10)
+  config_gem_probability        Int      @default(10)
+  config_gem_num                Int      @default(1)
+  config_present_max            Int      @default(500)
+  config_copper_goldbox         Int      @default(5)
+  config_copper_silverbox       Int      @default(5)
+  config_copper_box             Int      @default(5)
+  config_pet_drill              Int      @default(10)
+  config_pet_attribute_range    Int      @default(2)
+  config_pet_drill_experience   Int      @default(100)
+  config_pet_hour               Int      @default(20)
+  config_pet_drill_odds         Int      @default(90)
+  config_dog_food_exp           Int      @default(1)
+  config_dog_food_life          Int      @default(10)
+  config_dog_high_food_exp      Int      @default(1)
+  config_dog_high_food_life     Int      @default(10)
+  config_auto_harvest_time      Int      @default(1)
+  config_auto_seed_time         Int      @default(1)
+  config_luck_active_pro        String?  @db.VarChar(11) @default("10")
+  config_luck_add_pro           String?  @db.VarChar(11) @default("10")
+  config_dog_food_rose_exp      String?  @db.VarChar(11) @default("0")
+  config_dog_high_food_rose_exp String?  @db.VarChar(11) @default("0")
+  config_pet_drill_rose_exp     String?  @db.VarChar(11) @default("10")
+  config_special_exp            String?  @db.VarChar(11) @default("1000")
+  config_pet_food_attribute     String?  @db.VarChar(11) @default("6")
+  config_diamond_first          String?  @db.VarChar(11) @default("0")
+  config_diamond_second         String?  @db.VarChar(11) @default("200")
+  config_diamond_third          String?  @db.VarChar(11) @default("2000")
+  config_diamond_give           String?  @db.VarChar(11) @default("25")
+  config_diamond_recharge       String?  @db.VarChar(11) @default("1")
+  config_diamond_one            String?  @db.VarChar(11) @default("1")
+  config_diamond_two            String?  @db.VarChar(11) @default("0")
+  config_diamond_three          String?  @db.VarChar(11) @default("0")
+  config_rmb_gold               String?  @db.VarChar(11) @default("1")
+  config_open_time              String?  @db.VarChar(10) @default("09:00:00")
+  config_close_time             String?  @db.VarChar(10) @default("23:00:00")
+  config_limit_up               String?  @db.VarChar(11) @default("50")
+  config_limit_down             String?  @db.VarChar(11) @default("50")
+  config_trade_cost             String?  @db.VarChar(11) @default("0.01")
+  config_set_open_price         String?  @db.VarChar(11) @default("0.01")
+  config_seed_open_price        String?  @db.VarChar(11) @default("0.01")
+
+  @@map("think_game_config")
+}
+
+// ==================== 宠物列表 ====================
+model PetList {
+  id              Int      @id @default(autoincrement())
+  pet_name        String?  @db.VarChar(255)
+  pet_score       String?  @db.VarChar(255)
+  pet_identifier  String?  @db.VarChar(255)
+  pet_attack      String?  @db.VarChar(255)
+  pet_defense     String?  @db.VarChar(255)
+  pet_speed       String?  @db.VarChar(255)
+  pet_luck        String?  @db.VarChar(255)
+  pet_life        String?  @db.VarChar(255)
+  pet_description String?  @db.VarChar(255)
+
+  @@map("think_pet_list")
+}
+
+// ==================== 房屋列表 ====================
+model HouseList {
+  id               Int      @id @default(autoincrement())
+  house_name       String?  @db.VarChar(255)
+  house_level      String?  @db.VarChar(255)
+  house_info       String?  @db.VarChar(255)
+  house_description String? @db.VarChar(255)
+
+  @@map("think_house_list")
+}
+
+// ==================== 游戏记录 ====================
+model GameRecord {
+  id            Int       @id @default(autoincrement())
+  userid        Int?
+  username      String?   @db.VarChar(255)
+  game_time     DateTime? @db.DateTime
+  recharge      Int?
+  recharge_money Int?
+  fc            Int?
+
+  @@map("think_game_record")
+}
+
+// ==================== 商店分类 ====================
+model ShopClassList {
+  id        Int      @id @default(autoincrement())
+  name      String?  @db.VarChar(255)
+  sort      Int      @default(0)
+  status    Int      @default(1)
+
+  @@map("think_shop_class_list")
 }
 
 // ==================== 商店商品 ====================
@@ -159,22 +485,41 @@ model ShopCommodityList {
   status        Int       @default(1)
   description   String?   @db.Text
   sort          Int       @default(0)
-  createTime    DateTime  @default(now())
-  updateTime    DateTime  @updatedAt
 
   @@map("think_shop_commodity_list")
 }
 
-// ==================== 管理员表 ====================
-model Admin {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique @db.VarChar(50)
-  password  String   @db.VarChar(32)
-  loginip   String   @db.Char(15)
-  logintime Int
-  lock      Int      @default(0)
+// ==================== 签到记录 ====================
+model SignRecord {
+  id        Int       @id @default(autoincrement())
+  userid    Int
+  username  String?   @db.VarChar(50)
+  time      DateTime? @db.DateTime
+  type      Int       @default(1)
 
-  @@map("think_admin")
+  @@map("think_sign_record")
+}
+
+// ==================== 文章分类 ====================
+model ArticleClass {
+  id        Int      @id @default(autoincrement())
+  classname String   @unique @db.VarChar(30)
+
+  @@map("think_articleclass")
+}
+
+// ==================== 文章表 ====================
+model Article {
+  id            Int       @id @default(autoincrement())
+  author        String    @db.Char(30)
+  releasetime   Int
+  modifiedtime  Int
+  title         String    @db.VarChar(50)
+  content       String    @db.Text
+  browsenum     Int
+  classid       Int
+
+  @@map("think_article")
 }
 
 // ==================== 系统配置 ====================
@@ -182,7 +527,26 @@ model Sys {
   id        Int      @id @default(autoincrement())
   name      String?  @db.VarChar(255)
   value     String?  @db.Text
-  createTime DateTime @default(now())
 
   @@map("think_sys")
+}
+
+// ==================== 系统信息 ====================
+model SysInfo {
+  id        Int      @id @default(autoincrement())
+  name      String?  @db.VarChar(255)
+  value     String?  @db.Text
+
+  @@map("think_sysinfo")
+}
+
+// ==================== 公告表 ====================
+model Notice {
+  id        Int       @id @default(autoincrement())
+  title     String?   @db.VarChar(255)
+  content   String?   @db.Text
+  time      DateTime? @db.DateTime
+  status    Int       @default(1)
+
+  @@map("think_notice")
 }

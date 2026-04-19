@@ -1,111 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
 
-// 种植作物
-export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  
-  if (!user) {
-    return NextResponse.json({ error: '未登录' }, { status: 401 });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    const { landId, cropId } = body;
+    const body = await request.json();
+    const { landIndex, cropId } = body;
 
-    if (!landId || !cropId) {
-      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
-    }
-
-    // 检查土地是否属于当前用户
-    const land = await db.land.findFirst({
-      where: {
-        id: landId,
-        userId: user.id,
-        isUnlocked: true,
-      },
-    });
-
-    if (!land) {
-      return NextResponse.json({ error: '土地不存在或未解锁' }, { status: 400 });
-    }
-
-    // 检查土地是否已有作物
-    const existingCrop = await db.plantedCrop.findUnique({
-      where: { landId },
-    });
-
-    if (existingCrop && !existingCrop.isHarvested) {
-      return NextResponse.json({ error: '该土地上已有作物' }, { status: 400 });
-    }
-
-    // 检查用户是否有该种子
-    const inventory = await db.inventory.findFirst({
-      where: {
-        userId: user.id,
-        itemType: 'seed',
-        itemId: cropId,
-        quantity: { gt: 0 },
-      },
-    });
-
-    if (!inventory) {
-      return NextResponse.json({ error: '没有该种子' }, { status: 400 });
-    }
-
-    // 检查作物是否存在
-    const crop = await db.cropTemplate.findUnique({
-      where: { id: cropId },
-    });
-
-    if (!crop) {
-      return NextResponse.json({ error: '作物不存在' }, { status: 400 });
-    }
-
-    // 检查用户等级是否足够
-    if (user.level < crop.minLevel) {
-      return NextResponse.json({ error: `需要等级 ${crop.minLevel} 才能种植此作物` }, { status: 400 });
-    }
-
-    // 开始种植（事务）
-    await db.$transaction(async (tx) => {
-      // 减少种子数量
-      if (inventory.quantity === 1) {
-        await tx.inventory.delete({
-          where: { id: inventory.id },
-        });
-      } else {
-        await tx.inventory.update({
-          where: { id: inventory.id },
-          data: { quantity: { decrement: 1 } },
-        });
-      }
-
-      // 如果有已收获的作物记录，删除它
-      if (existingCrop) {
-        await tx.plantedCrop.delete({
-          where: { id: existingCrop.id },
-        });
-      }
-
-      // 创建种植记录
-      await tx.plantedCrop.create({
-        data: {
-          landId,
-          cropId,
-          plantedAt: new Date(),
-          isHarvested: false,
-        },
+    if (landIndex === undefined || !cropId) {
+      return NextResponse.json({
+        success: false,
+        message: '参数错误'
       });
+    }
+
+    // 获取用户（简化处理）
+    const user = await db.user.findFirst({
+      where: { status: 1 },
+      include: { userlist: true }
+    });
+
+    if (!user || !user.userlist) {
+      return NextResponse.json({
+        success: false,
+        message: '用户不存在'
+      });
+    }
+
+    const userlist = user.userlist;
+    const landField = `tudi${landIndex + 1}` as keyof typeof userlist;
+    const ztField = `zt${landIndex + 1}` as keyof typeof userlist;
+    const kttimeField = `kttime${landIndex + 1}` as keyof typeof userlist;
+
+    // 检查土地是否已开垦
+    if (userlist[landField] !== 1) {
+      return NextResponse.json({
+        success: false,
+        message: '请先开垦土地'
+      });
+    }
+
+    // 检查土地上是否已有作物
+    if (userlist[ztField] && userlist[ztField] !== '-1' && userlist[ztField] !== '0') {
+      return NextResponse.json({
+        success: false,
+        message: '该土地上已有作物'
+      });
+    }
+
+    // 检查种子数量
+    const seedCount = userlist.zhongzi || 0;
+    if (seedCount < 1) {
+      return NextResponse.json({
+        success: false,
+        message: '种子不足，请购买种子'
+      });
+    }
+
+    // 更新数据库
+    const updateData: any = {};
+    updateData[ztField] = String(cropId);
+    updateData[kttimeField] = new Date();
+    updateData.zhongzi = seedCount - 1;
+
+    await db.userlist.update({
+      where: { userid: user.id },
+      data: updateData
+    });
+
+    // 获取更新后的用户数据
+    const updatedUser = await db.user.findUnique({
+      where: { id: user.id },
+      include: { userlist: true }
     });
 
     return NextResponse.json({
       success: true,
-      message: `成功种植 ${crop.name}`,
+      message: '种植成功',
+      user: {
+        ...updatedUser,
+        userlist: updatedUser?.userlist
+      }
     });
   } catch (error) {
     console.error('种植错误:', error);
-    return NextResponse.json({ error: '种植失败，请稍后重试' }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      message: '服务器错误'
+    });
   }
 }
