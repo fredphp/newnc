@@ -14,8 +14,8 @@ async function getCurrentUserId(request: NextRequest): Promise<number | null> {
   return null;
 }
 
-// 签到奖励配置
-const SIGN_REWARDS = [
+// 默认签到奖励配置
+const DEFAULT_SIGN_REWARDS = [
   { day: 1, gold: 100, diamond: 0 },
   { day: 2, gold: 120, diamond: 0 },
   { day: 3, gold: 140, diamond: 0 },
@@ -24,6 +24,22 @@ const SIGN_REWARDS = [
   { day: 6, gold: 200, diamond: 0 },
   { day: 7, gold: 300, diamond: 1 },
 ];
+
+// 获取签到奖励配置
+async function getSignRewards() {
+  try {
+    const config = await db.sys.findFirst({
+      where: { name: 'sign_rewards' },
+    });
+
+    if (config && config.value) {
+      return JSON.parse(config.value);
+    }
+  } catch (e) {
+    console.error('获取签到配置失败，使用默认配置');
+  }
+  return DEFAULT_SIGN_REWARDS;
+}
 
 // 获取签到状态
 export async function GET(request: NextRequest) {
@@ -42,6 +58,9 @@ export async function GET(request: NextRequest) {
     if (!user || !user.userlist) {
       return NextResponse.json({ success: false, message: '用户数据不存在' }, { status: 404 });
     }
+
+    // 获取签到奖励配置
+    const SIGN_REWARDS = await getSignRewards();
 
     const userlist = user.userlist;
     const now = new Date();
@@ -91,7 +110,7 @@ export async function GET(request: NextRequest) {
       dayDate.setDate(dayDate.getDate() - (6 - i));
       const dayNum = i + 1; // 1-7
       
-      const reward = SIGN_REWARDS.find(r => r.day === dayNum) || SIGN_REWARDS[0];
+      const reward = SIGN_REWARDS.find((r: any) => r.day === dayNum) || SIGN_REWARDS[0];
       const signed = signRecords.some(r => {
         const recordDate = new Date(r.time!);
         return recordDate.toDateString() === dayDate.toDateString();
@@ -109,7 +128,7 @@ export async function GET(request: NextRequest) {
 
     // 计算下次签到的奖励
     const nextDay = (continuousDays % 7) + 1;
-    const nextReward = SIGN_REWARDS.find(r => r.day === nextDay) || SIGN_REWARDS[0];
+    const nextReward = SIGN_REWARDS.find((r: any) => r.day === nextDay) || SIGN_REWARDS[0];
 
     return NextResponse.json({
       success: true,
@@ -149,6 +168,9 @@ export async function POST(request: NextRequest) {
     if (!user || !user.userlist) {
       return NextResponse.json({ success: false, message: '用户数据不存在' }, { status: 404 });
     }
+
+    // 获取签到奖励配置
+    const SIGN_REWARDS = await getSignRewards();
 
     const userlist = user.userlist;
     const now = new Date();
@@ -191,7 +213,7 @@ export async function POST(request: NextRequest) {
 
     // 计算奖励（第7天后循环）
     const rewardDay = ((continuousDays - 1) % 7) + 1;
-    const reward = SIGN_REWARDS.find(r => r.day === rewardDay) || SIGN_REWARDS[0];
+    const reward = SIGN_REWARDS.find((r: any) => r.day === rewardDay) || SIGN_REWARDS[0];
 
     // 更新用户数据
     const currentGold = parseInt(userlist.gold || '0');
