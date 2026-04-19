@@ -3,9 +3,7 @@ import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 import { verifyVcode } from '@/lib/vcode-store';
-
-// 简单的会话存储（生产环境应使用 Redis 等）
-const sessions = new Map<string, { userId: number; username: string }>();
+import { setSession, getSession, hasSession, deleteSession } from '@/lib/session-store';
 
 // 密码加密函数 - 匹配原项目 MD5(password + password)
 function encryptPassword(password: string): string {
@@ -97,17 +95,22 @@ export async function POST(request: NextRequest) {
 
     // 创建会话
     const token = generateToken();
-    sessions.set(token, { userId: user.id, username: user.username || loginName });
+    setSession(token, user.id, user.username || loginName);
 
     // 更新用户登录信息
-    await db.user.update({
-      where: { id: user.id },
-      data: {
-        logtime: new Date(),
-        lognum: (user.lognum || 0) + 1,
-        logip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
-      }
-    });
+    try {
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          logtime: new Date(),
+          lognum: (user.lognum || 0) + 1,
+          logip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+        }
+      });
+    } catch (updateError) {
+      console.error('更新用户登录信息失败:', updateError);
+      // 不影响登录流程
+    }
 
     // 设置 cookie
     cookieStore.set('session_token', token, {
@@ -117,6 +120,8 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7, // 7 天
       path: '/',
     });
+
+    console.log('登录成功:', { userId: user.id, username: user.username });
 
     return NextResponse.json({
       success: true,
@@ -142,27 +147,50 @@ export async function GET() {
     const cookieStore = await cookies();
     const token = cookieStore.get('session_token')?.value;
 
-    if (!token || !sessions.has(token)) {
+    console.log('GET 会话检查:', { hasToken: !!token });
+
+    if (!token || !hasSession(token)) {
+      console.log('会话无效或已过期');
       return NextResponse.json({
         success: false,
         message: '未登录'
       });
     }
 
-    const session = sessions.get(token)!;
+    const session = getSession(token)!;
+    
+    console.log('找到会话:', { userId: session.userId, username: session.username });
     
     // 获取用户详细信息
     const user = await db.user.findUnique({
-      where: { id: session.userId },
-      include: { userlist: true }
+      where: { id: session.userId }
     });
 
     if (!user) {
+      console.log('用户不存在:', session.userId);
+      deleteSession(token);
       return NextResponse.json({
         success: false,
         message: '用户不存在'
       });
     }
+
+    // 获取用户游戏数据
+    let userlist = null;
+    try {
+      const userListData = await db.userlist.findUnique({
+        where: { userid: user.id }
+      });
+      userlist = userListData;
+    } catch (e) {
+      console.error('获取 userlist 失败:', e);
+    }
+
+    console.log('返回用户数据:', { 
+      id: user.id, 
+      username: user.username, 
+      hasUserlist: !!userlist 
+    });
 
     return NextResponse.json({
       success: true,
@@ -170,7 +198,7 @@ export async function GET() {
         id: user.id,
         username: user.username,
         nickname: user.nickname,
-        userlist: user.userlist
+        userlist: userlist
       }
     });
   } catch (error) {
