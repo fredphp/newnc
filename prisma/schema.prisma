@@ -323,15 +323,15 @@ model CropsList {
 
 // ==================== 用户背包 ====================
 model Userbag {
-  id        Int       @id @default(autoincrement())
-  name      String?   @db.VarChar(255)  // 物品名称
-  num       Int?                         // 数量
-  userid    Int?                         // 用户ID
-  username  String?   @db.VarChar(255)  // 用户名
-  buy_time  DateTime? @db.DateTime      // 购买时间
-  dq_time   DateTime? @db.DateTime      // 到期时间
+  id        Int?     @default(autoincrement())
+  name      String?  @db.VarChar(255)  // 物品名称
+  num       Int?                        // 数量
+  userid    Int?                        // 用户ID
+  username  String?  @db.VarChar(255)  // 用户名
+  buy_time  DateTime? @db.DateTime     // 购买时间
+  dq_time   DateTime? @db.DateTime     // 到期时间
 
-  @@index([userid])
+  @@unique([id, userid])
   @@map("think_userbag")
 }
 
@@ -533,10 +533,11 @@ model Sys {
 
 // ==================== 系统信息 ====================
 model SysInfo {
-  id        Int      @id @default(autoincrement())
+  id        Int?     @default(autoincrement())
   name      String?  @db.VarChar(255)
   value     String?  @db.Text
 
+  @@unique([id, name])
   @@map("think_sysinfo")
 }
 
