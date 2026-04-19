@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import './farm.css';
 
@@ -62,6 +62,14 @@ export default function FarmPage() {
   const [selectedLandLevel, setSelectedLandLevel] = useState<number | null>(null); // 选中的土地等级
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  
+  // 底部按钮展开状态
+  const [leftExpanded, setLeftExpanded] = useState(true); // true = 收起, false = 展开
+  const [rightExpanded, setRightExpanded] = useState(true); // true = 收起, false = 展开
+  
+  // 按钮激活状态
+  const [activeLeftBtn, setActiveLeftBtn] = useState<number | null>(null);
+  const [activeRightBtn, setActiveRightBtn] = useState<number | null>(null);
 
   // 设置 rem 单位和引入 CSS
   useEffect(() => {
@@ -305,22 +313,84 @@ export default function FarmPage() {
       <div className="SmallHouse animated" style={{ cursor: 'pointer' }} onClick={() => setShowModal('chongwu')}></div>
 
       {/* 页面左下角按钮 */}
-      <div className="footerLeft">
-        <div className="leftBtn1" onClick={() => setShowModal('cangku')}></div>
-        <div className="leftBtn2" onClick={() => setShowModal('duihuan')}></div>
-        <div className="leftBtn3" onClick={() => setShowModal('shangdian')}></div>
-        <div className="leftBtn4" onClick={() => { setJiansheTab(0); setShowModal('jianshe'); }}></div>
+      <div 
+        className="footerLeft" 
+        style={{ transform: leftExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+      >
+        <div 
+          className="leftBtn1" 
+          style={{ background: activeLeftBtn === 1 ? 'url(/images/1.png)' : undefined, backgroundSize: 'cover' }}
+          onTouchStart={() => setActiveLeftBtn(1)}
+          onTouchEnd={() => { setActiveLeftBtn(null); setShowModal('cangku'); }}
+          onClick={() => setShowModal('cangku')}
+        ></div>
+        <div 
+          className="leftBtn2"
+          style={{ background: activeLeftBtn === 2 ? 'url(/images/2.png)' : undefined, backgroundSize: 'cover' }}
+          onTouchStart={() => setActiveLeftBtn(2)}
+          onTouchEnd={() => { setActiveLeftBtn(null); setShowModal('duihuan'); }}
+          onClick={() => setShowModal('duihuan')}
+        ></div>
+        <div 
+          className="leftBtn3"
+          style={{ background: activeLeftBtn === 3 ? 'url(/images/3.png)' : undefined, backgroundSize: 'cover' }}
+          onTouchStart={() => setActiveLeftBtn(3)}
+          onTouchEnd={() => { setActiveLeftBtn(null); setShowModal('shangdian'); }}
+          onClick={() => setShowModal('shangdian')}
+        ></div>
+        <div 
+          className="leftBtn4"
+          style={{ background: activeLeftBtn === 4 ? 'url(/images/4.png)' : undefined, backgroundSize: 'cover' }}
+          onTouchStart={() => setActiveLeftBtn(4)}
+          onTouchEnd={() => { setActiveLeftBtn(null); setJiansheTab(0); setShowModal('jianshe'); }}
+          onClick={() => { setJiansheTab(0); setShowModal('jianshe'); }}
+        ></div>
       </div>
-      <div id="footerLeftBtn" onClick={() => setShowModal('geren')}></div>
+      <div 
+        id="footerLeftBtn" 
+        onClick={() => setLeftExpanded(!leftExpanded)}
+        style={{ cursor: 'pointer' }}
+      ></div>
 
       {/* 页面右下角按钮 */}
-      <div className="footerRight">
-        <div className="rightBtn1" onClick={() => setShowModal('rizhi')}></div>
-        <div className="rightBtn2" onClick={() => setShowModal('paihang')}></div>
-        <div className="rightBtn3" onClick={() => setShowModal('shezhi')}></div>
-        <div className="rightBtn4" onClick={() => setShowModal('chongwu')}></div>
+      <div 
+        className="footerRight"
+        style={{ transform: rightExpanded ? 'rotate(-90deg)' : 'rotate(0deg)' }}
+      >
+        <div 
+          className="rightBtn1"
+          style={{ background: activeRightBtn === 1 ? 'url(/images/6.png)' : undefined, backgroundSize: 'cover' }}
+          onTouchStart={() => setActiveRightBtn(1)}
+          onTouchEnd={() => { setActiveRightBtn(null); setShowModal('rizhi'); }}
+          onClick={() => setShowModal('rizhi')}
+        ></div>
+        <div 
+          className="rightBtn2"
+          style={{ background: activeRightBtn === 2 ? 'url(/images/7.png)' : undefined, backgroundSize: 'cover' }}
+          onTouchStart={() => setActiveRightBtn(2)}
+          onTouchEnd={() => { setActiveRightBtn(null); setShowModal('paihang'); }}
+          onClick={() => setShowModal('paihang')}
+        ></div>
+        <div 
+          className="rightBtn3"
+          style={{ background: activeRightBtn === 3 ? 'url(/images/8.png)' : undefined, backgroundSize: 'cover' }}
+          onTouchStart={() => setActiveRightBtn(3)}
+          onTouchEnd={() => { setActiveRightBtn(null); setShowModal('shezhi'); }}
+          onClick={() => setShowModal('shezhi')}
+        ></div>
+        <div 
+          className="rightBtn4"
+          style={{ background: activeRightBtn === 4 ? 'url(/images/9.png)' : undefined, backgroundSize: 'cover' }}
+          onTouchStart={() => setActiveRightBtn(4)}
+          onTouchEnd={() => { setActiveRightBtn(null); setShowModal('chongwu'); }}
+          onClick={() => setShowModal('chongwu')}
+        ></div>
       </div>
-      <div id="footerRightBtn"></div>
+      <div 
+        id="footerRightBtn"
+        onClick={() => setRightExpanded(!rightExpanded)}
+        style={{ cursor: 'pointer' }}
+      ></div>
 
       {/* 个人左上角按钮 */}
       <div className="gerenBox">
