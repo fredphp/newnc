@@ -202,7 +202,7 @@ export async function GET() {
             hamigua: '0',
             xiangli: '0',
             shamoguo: '0',
-            rensheuguo: '0',
+            renshenguo: '0',
             // 初始化12块土地状态
             // tudi: 0=未开垦(灰色), 1=已开垦(亮色)
             // zt: -1=未开垦, 0=空地可播种, 1=已播种, 2=枯萎

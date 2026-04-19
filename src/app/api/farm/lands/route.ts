@@ -171,7 +171,7 @@ export async function GET() {
         shamoguo: userlist.shamoguo,
         shiliu: userlist.shiliu,
         xiangli: userlist.xiangli,
-        rensheuguo: userlist.rensheuguo,
+        renshenguo: userlist.renshenguo,
       }
     },
   });

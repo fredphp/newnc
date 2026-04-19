@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://root:root@localhost:3306/nongchang"
+  url      = env("DATABASE_URL")
 }
 
 // ==================== 管理员表 ====================
@@ -200,7 +200,7 @@ model Userlist {
   shamoguo      String    @default("0")    // 沙漠果
   shiliu        String    @default("0")    // 石榴
   xiangli       String    @default("0")    // 香梨
-  rensheuguo    String    @default("0")    // 人参果 (原字段名 rensheuguo)
+  renshenguo    String    @default("0")    // 人参果 (原字段名 renshenguo)
   xunyichao     String    @default("0")    // 薰衣草
   shamorenshen  String    @default("0")    // 沙漠人参
   badanmu       String    @default("0")    // 巴旦木
@@ -214,7 +214,7 @@ model Userlist {
   yj_hamigua    String?   
   yj_xiangli    String?   
   yj_shamoguo   String?   
-  yj_rensheuguo String?   
+  yj_renshenguo String?   
   yj_xunyichao  String?   
   yj_shamorenshen String? 
   yj_badanmu    String?   

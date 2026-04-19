@@ -14,7 +14,7 @@ async function main() {
     { id: 5, crops_name: '哈密瓜', crops_identifier: 'plantingHamiMelon', crops_harvest: '40', crops_probability: '15', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'hamigua' },
     { id: 6, crops_name: '香梨', crops_identifier: 'plantingFragrantPea', crops_harvest: '40', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'xiangli' },
     { id: 7, crops_name: '沙漠果', crops_identifier: 'plantingDesertFruit', crops_harvest: '20', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'shamoguo' },
-    { id: 8, crops_name: '人参果', crops_identifier: 'plantingGinsengFruit', crops_harvest: '20', crops_probability: '15', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'rensheuguo' },
+    { id: 8, crops_name: '人参果', crops_identifier: 'plantingGinsengFruit', crops_harvest: '20', crops_probability: '15', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'renshenguo' },
     { id: 9, crops_name: '薰衣草', crops_identifier: 'plantinglavender', crops_harvest: '20', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'xunyichao' },
     { id: 10, crops_name: '沙漠人参', crops_identifier: 'plantingginseng', crops_harvest: '15', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'shamorenshen' },
     { id: 11, crops_name: '巴旦木', crops_identifier: 'plantingalmonds', crops_harvest: '7', crops_probability: '20', crops_seed: '0.1', crops_sprout: '0.2', crops_grow: '0.3', crops_open_price: '1', name: 'badanmu' },
@@ -81,7 +81,7 @@ async function main() {
       shamoguo: '0',
       shiliu: '0',
       xiangli: '0',
-      rensheuguo: '0',
+      renshenguo: '0',
     },
   });
   console.log('创建了用户游戏数据');

@@ -40,7 +40,7 @@ async function main() {
       hamigua: '0',
       xiangli: '0',
       shamoguo: '0',
-      rensheuguo: '0',
+      renshenguo: '0',
       // 土地状态：tudi 字段直接对应图片编号
       // 0 = 未开垦（灰色土地），1 = 已开垦（亮色土地）
       tudi1: 1,   // 第一块土地已开垦

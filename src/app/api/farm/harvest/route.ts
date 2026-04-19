@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       '5': 'hamigua',
       '6': 'xiangli',
       '7': 'shamoguo',
-      '8': 'rensheuguo',
+      '8': 'renshenguo',
       '9': 'xunyichao',
       '10': 'shamorenshen',
       '11': 'badanmu',

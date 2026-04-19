@@ -21,7 +21,7 @@ interface UserlistData {
   hamigua: string;
   xiangli: string;
   shamoguo: string;
-  rensheuguo: string;
+  renshenguo: string;
   muban: string;
   shitou: string;
   tudi1: number; tudi2: number; tudi3: number; tudi4: number;
@@ -154,7 +154,7 @@ export default function FarmPage() {
       gold: '1000', zs: '10', rmb: '0', lvl: 1, zhongzi: 5, fangwu: 1,
       bg1: 1, bg2: 0, bg3: 0,
       hetao: '0', shiliu: '0', hongzao: '0', putao: '0',
-      hamigua: '0', xiangli: '0', shamoguo: '0', rensheuguo: '0',
+      hamigua: '0', xiangli: '0', shamoguo: '0', renshenguo: '0',
       muban: '0', shitou: '0',
     };
     for (let i = 1; i <= 12; i++) {
@@ -774,7 +774,7 @@ export default function FarmPage() {
               </div>
               <div className="cangluList">
                 <img src="/picture/593f58e568485.png" alt="人参果" />
-                <span>{user?.userlist?.rensheuguo || '0'}</span>
+                <span>{user?.userlist?.renshenguo || '0'}</span>
               </div>
               <div className="cangluList">
                 <img src="/picture/593f4c4de30b1.png" alt="石榴" />
