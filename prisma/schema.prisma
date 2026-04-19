@@ -101,15 +101,15 @@ model Userlist {
   kttime1       DateTime? @db.DateTime
   kttime2       DateTime? @db.DateTime
   kttime3       DateTime? @db.DateTime
-  kttime4       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
-  kttime5       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
-  kttime6       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
-  kttime7       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
-  kttime8       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
-  kttime9       DateTime? @db.DateTime @default("0000-00-00 00:00:00")
-  kttime10      DateTime? @db.DateTime @default("0000-00-00 00:00:00")
-  kttime11      DateTime? @db.DateTime @default("0000-00-00 00:00:00")
-  kttime12      DateTime? @db.DateTime @default("0000-00-00 00:00:00")
+  kttime4       DateTime? @db.DateTime
+  kttime5       DateTime? @db.DateTime
+  kttime6       DateTime? @db.DateTime
+  kttime7       DateTime? @db.DateTime
+  kttime8       DateTime? @db.DateTime
+  kttime9       DateTime? @db.DateTime
+  kttime10      DateTime? @db.DateTime
+  kttime11      DateTime? @db.DateTime
+  kttime12      DateTime? @db.DateTime
   
   // 土地果实数量
   land_gs1      String?   @default("0") @db.VarChar(10)
@@ -326,7 +326,7 @@ model CropsList {
 
 // ==================== 用户背包 ====================
 model Userbag {
-  id        Int?      
+  id        Int       @id @default(autoincrement())
   name      String?   @db.VarChar(255)  // 物品名称
   num       Int?                         // 数量
   userid    Int?                         // 用户ID
@@ -334,6 +334,10 @@ model Userbag {
   buy_time  DateTime? @db.DateTime      // 购买时间
   dq_time   DateTime? @db.DateTime      // 到期时间
 
+  // 关联用户
+  user      User?     @relation(fields: [userid], references: [id])
+
+  @@index([userid])
   @@map("think_userbag")
 }
 
@@ -347,6 +351,10 @@ model UserLog {
   score     Float     @default(0)       // 积分变动
   source    Int       @default(0)       // 来源: 0任务 1邀请
 
+  // 关联用户
+  user      User?     @relation(fields: [userid], references: [id])
+
+  @@index([userid])
   @@map("think_user_log")
 }
 
@@ -459,6 +467,10 @@ model GameRecord {
   recharge_money Int?
   fc            Int?
 
+  // 关联用户
+  user          User?     @relation(fields: [userid], references: [id])
+
+  @@index([userid])
   @@map("think_game_record")
 }
 
