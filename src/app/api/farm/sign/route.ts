@@ -45,8 +45,11 @@ async function getSignRewards() {
 export async function GET(request: NextRequest) {
   try {
     const userId = await getCurrentUserId(request);
+    console.log('签到API - 用户ID:', userId);
+    
     if (!userId) {
-      return NextResponse.json({ success: false, message: '请先登录' }, { status: 401 });
+      console.log('签到API - 用户未登录');
+      return NextResponse.json({ success: false, message: '请先登录', needLogin: true }, { status: 401 });
     }
 
     // 获取用户数据
@@ -55,8 +58,36 @@ export async function GET(request: NextRequest) {
       include: { userlist: true },
     });
 
-    if (!user || !user.userlist) {
-      return NextResponse.json({ success: false, message: '用户数据不存在' }, { status: 404 });
+    console.log('签到API - 用户数据:', { hasUser: !!user, hasUserlist: !!user?.userlist });
+
+    if (!user) {
+      return NextResponse.json({ success: false, message: '用户不存在' }, { status: 404 });
+    }
+    
+    if (!user.userlist) {
+      // 如果用户没有游戏数据，返回默认数据而不是错误
+      console.log('签到API - 用户无游戏数据，返回默认值');
+      const SIGN_REWARDS = await getSignRewards();
+      const calendar = SIGN_REWARDS.map((r: any, index: number) => ({
+        day: r.day,
+        date: new Date().getDate() - (6 - index),
+        gold: r.gold,
+        diamond: r.diamond,
+        signed: false,
+        isToday: index === 6,
+      }));
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          hasSignedToday: false,
+          continuousDays: 0,
+          nextReward: SIGN_REWARDS[0],
+          calendar,
+          totalGold: 0,
+          totalDiamond: 0,
+        },
+      });
     }
 
     // 获取签到奖励配置
@@ -146,7 +177,7 @@ export async function GET(request: NextRequest) {
     console.error('获取签到状态失败:', error);
     return NextResponse.json({ 
       success: false, 
-      message: '获取签到状态失败' 
+      message: '获取签到状态失败: ' + (error instanceof Error ? error.message : '未知错误')
     }, { status: 500 });
   }
 }

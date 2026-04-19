@@ -283,8 +283,32 @@ export default function FarmPage() {
     try {
       const res = await fetch('/api/farm/sign');
       const data = await res.json();
+      console.log('签到状态:', data);
       if (data.success) {
         setSignData(data.data);
+      } else {
+        console.log('签到状态获取失败:', data.message);
+        // 如果需要登录，可以设置默认数据
+        if (data.needLogin) {
+          // 用户未登录，设置默认签到数据
+          const defaultCalendar = [
+            { day: 1, gold: 100, diamond: 0, signed: false, isToday: false },
+            { day: 2, gold: 120, diamond: 0, signed: false, isToday: false },
+            { day: 3, gold: 140, diamond: 0, signed: false, isToday: false },
+            { day: 4, gold: 160, diamond: 0, signed: false, isToday: false },
+            { day: 5, gold: 180, diamond: 0, signed: false, isToday: false },
+            { day: 6, gold: 200, diamond: 0, signed: false, isToday: false },
+            { day: 7, gold: 300, diamond: 1, signed: false, isToday: true },
+          ];
+          setSignData({
+            hasSignedToday: false,
+            continuousDays: 0,
+            nextReward: { gold: 100, diamond: 0 },
+            calendar: defaultCalendar,
+            totalGold: parseInt(user?.userlist?.gold || '0'),
+            totalDiamond: parseInt(user?.userlist?.zs || '0'),
+          });
+        }
       }
     } catch (error) {
       console.error('获取签到状态失败:', error);
@@ -901,18 +925,17 @@ export default function FarmPage() {
 
       {/* 签到弹窗 */}
       {showModal === 'qiandao' && (
-        <div className="qiandaoBox animated" style={{ display: 'block' }}>
+        <div className="qiandaoBox animated bounceIn" style={{ display: 'block' }}>
           <div className="remove animated" onClick={() => setShowModal(null)}></div>
           
           {/* 签到标题 */}
           <div className="qiandao-title">
-            <img src="/picture/qiandao-title.png" alt="每日签到" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            <span>每日签到</span>
+            <span>📅 每日签到</span>
           </div>
           
           {/* 连续签到天数 */}
           <div className="qiandao-count">
-            已连续签到 <span className="qiandao-days">{signData?.continuousDays || 0}</span> 天
+            🔥 已连续签到 <span className="qiandao-days">{signData?.continuousDays || 0}</span> 天
           </div>
           
           {/* 签到日历 */}
@@ -936,7 +959,7 @@ export default function FarmPage() {
                   )}
                 </div>
                 <div className="day-status">
-                  {day.signed ? '✓' : (day.isToday ? '今日' : '')}
+                  {day.signed ? '✓ 已签' : (day.isToday ? '待签' : '')}
                 </div>
               </div>
             ))}
@@ -946,20 +969,19 @@ export default function FarmPage() {
           <div className="qiandao-today-reward">
             {signData?.hasSignedToday ? (
               <div className="qiandao-done">
-                <img src="/picture/qiandao-done.png" alt="已签到" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                <span>今日已签到</span>
+                <span>✅ 今日已签到</span>
               </div>
             ) : (
               <div className="qiandao-reward-info">
-                今日签到可获得：
+                🎁 今日可领：
                 <span className="reward-gold">
                   <img src="/images/02.png" alt="金币" />
-                  {signData?.nextReward?.gold || 100} 金币
+                  {signData?.nextReward?.gold || 100}
                 </span>
                 {signData?.nextReward?.diamond && signData.nextReward.diamond > 0 && (
                   <span className="reward-diamond">
                     <img src="/images/03.png" alt="钻石" />
-                    {signData.nextReward.diamond} 钻石
+                    {signData.nextReward.diamond}
                   </span>
                 )}
               </div>
@@ -971,7 +993,7 @@ export default function FarmPage() {
             className={`qiandao-btn ${signData?.hasSignedToday ? 'disabled' : ''} ${signLoading ? 'loading' : ''}`}
             onClick={handleSign}
           >
-            {signLoading ? '签到中...' : (signData?.hasSignedToday ? '已签到' : '立即签到')}
+            {signLoading ? '⏳ 签到中...' : (signData?.hasSignedToday ? '✓ 已签到' : '🎉 立即签到')}
           </div>
           
           {/* 资产信息 */}
