@@ -3,23 +3,8 @@
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
   --primary: 142.1 76.2% 36.3%;
   --primary-foreground: 355.7 100% 97.3%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 142.1 76.2% 36.3%;
   --radius: 0.75rem;
   
   /* 农场主题色 */
@@ -27,332 +12,484 @@
   --farm-yellow: #eab308;
   --farm-brown: #92400e;
   --farm-sky: #38bdf8;
-  --farm-earth: #78716c;
-}
-
-.dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 142.1 70.6% 45.3%;
-  --primary-foreground: 144.9 80.4% 10%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 142.1 76.2% 36.3%;
 }
 
 * {
   border-color: hsl(var(--border));
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%);
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 30%, #a7f3d0 100%);
   color: hsl(var(--foreground));
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
+  overscroll-behavior: none;
 }
 
-/* 农场格子样式 */
+/* ========== 农场格子样式 ========== */
 .farm-land {
   background: linear-gradient(145deg, #fef3c7 0%, #fde68a 50%, #d4a574 100%);
   border: 3px solid #92400e;
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06),
     inset 0 2px 4px rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
+/* 土地纹理 */
 .farm-land::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 10px,
-    rgba(139, 90, 43, 0.1) 10px,
-    rgba(139, 90, 43, 0.1) 11px
-  );
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 8px,
+      rgba(139, 90, 43, 0.08) 8px,
+      rgba(139, 90, 43, 0.08) 9px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 8px,
+      rgba(139, 90, 43, 0.05) 8px,
+      rgba(139, 90, 43, 0.05) 9px
+    );
   pointer-events: none;
 }
 
+/* 点击/触摸反馈 */
+.farm-land:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
 .farm-land:hover {
-  transform: translateY(-4px) scale(1.02);
+  transform: translateY(-4px);
   box-shadow: 
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    0 12px 20px -4px rgba(0, 0, 0, 0.15),
+    0 4px 8px -2px rgba(0, 0, 0, 0.1);
 }
 
+/* 未解锁土地 */
 .farm-land.locked {
-  background: linear-gradient(145deg, #9ca3af 0%, #6b7280 100%);
-  border-color: #4b5563;
+  background: linear-gradient(145deg, #d1d5db 0%, #9ca3af 100%);
+  border-color: #6b7280;
 }
 
+.farm-land.locked:active {
+  transform: scale(0.98);
+}
+
+/* 成熟作物 - 呼吸动画 */
 .farm-land.ready {
-  animation: ready-pulse 1.5s ease-in-out infinite;
-  border-color: #eab308;
+  animation: ready-glow 2s ease-in-out infinite;
+  border-color: #fbbf24;
 }
 
-@keyframes ready-pulse {
+@keyframes ready-glow {
   0%, 100% {
     box-shadow: 
-      0 0 0 0 rgba(234, 179, 8, 0.4),
+      0 0 0 0 rgba(251, 191, 36, 0.5),
       0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
   50% {
     box-shadow: 
-      0 0 0 10px rgba(234, 179, 8, 0),
+      0 0 0 12px rgba(251, 191, 36, 0),
       0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* 作物动画 */
+/* ========== 作物动画 ========== */
 .crop-icon {
   display: inline-block;
-  animation: crop-sway 3s ease-in-out infinite;
+  animation: crop-sway 4s ease-in-out infinite;
   transform-origin: bottom center;
+  will-change: transform;
 }
 
 @keyframes crop-sway {
-  0%, 100% {
-    transform: rotate(-3deg);
-  }
-  50% {
-    transform: rotate(3deg);
-  }
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  25% { transform: rotate(1deg) translateY(-1px); }
+  50% { transform: rotate(2deg) translateY(0); }
+  75% { transform: rotate(-1deg) translateY(-1px); }
 }
 
-.crop-icon.growing {
-  animation: crop-grow 0.5s ease-out, crop-sway 3s ease-in-out infinite 0.5s;
+/* 种植动画 */
+.crop-icon.planting {
+  animation: plant-seed 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@keyframes crop-grow {
+@keyframes plant-seed {
   0% {
-    transform: scale(0);
+    transform: scale(0) translateY(20px);
     opacity: 0;
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.3) translateY(-5px);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(0.9) translateY(0);
+    opacity: 1;
   }
   100% {
-    transform: scale(1);
+    transform: scale(1) translateY(0);
     opacity: 1;
+  }
+}
+
+/* 生长阶段动画 */
+.crop-icon.stage-1 {
+  animation: grow-stage-1 0.8s ease-out forwards, crop-sway 4s ease-in-out infinite 0.8s;
+}
+
+.crop-icon.stage-2 {
+  animation: grow-stage-2 0.8s ease-out forwards, crop-sway 4s ease-in-out infinite 0.8s;
+}
+
+.crop-icon.stage-3 {
+  animation: grow-stage-3 0.8s ease-out forwards, crop-sway 4s ease-in-out infinite 0.8s;
+}
+
+.crop-icon.stage-4 {
+  animation: grow-stage-4 0.8s ease-out forwards, crop-sway 4s ease-in-out infinite 0.8s;
+}
+
+@keyframes grow-stage-1 {
+  0% { transform: scale(0.8) translateY(5px); opacity: 0.7; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes grow-stage-2 {
+  0% { transform: scale(0.9) translateY(3px); }
+  50% { transform: scale(1.05) translateY(-2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes grow-stage-3 {
+  0% { transform: scale(0.95); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes grow-stage-4 {
+  0% { transform: scale(0.98); }
+  30% { transform: scale(1.15) rotate(3deg); }
+  60% { transform: scale(1.05) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* 成熟闪烁 */
+.crop-icon.mature {
+  animation: mature-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes mature-pulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 0 rgba(251, 191, 36, 0));
+    transform: scale(1);
+  }
+  50% { 
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.8));
+    transform: scale(1.05);
   }
 }
 
 /* 收获动画 */
+.harvest-animation {
+  animation: harvest-bounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 @keyframes harvest-bounce {
-  0%, 100% {
+  0% { transform: scale(1) translateY(0); }
+  20% { transform: scale(1.2) translateY(-30px) rotate(10deg); }
+  40% { transform: scale(1.1) translateY(-40px) rotate(-5deg); }
+  60% { transform: scale(1.15) translateY(-20px) rotate(5deg); }
+  80% { transform: scale(1.05) translateY(-5px) rotate(-2deg); }
+  100% { transform: scale(0) translateY(0) rotate(0); opacity: 0; }
+}
+
+/* ========== 金币飞出动画 ========== */
+.coin-float {
+  position: fixed;
+  font-size: 24px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: coin-fly 1.2s ease-out forwards;
+}
+
+@keyframes coin-fly {
+  0% {
     transform: translateY(0) scale(1);
-  }
-  25% {
-    transform: translateY(-15px) scale(1.1);
+    opacity: 1;
   }
   50% {
-    transform: translateY(-25px) scale(1.15) rotate(5deg);
-  }
-  75% {
-    transform: translateY(-15px) scale(1.1) rotate(-5deg);
-  }
-}
-
-.harvesting {
-  animation: harvest-bounce 0.6s ease-out;
-}
-
-/* 金币动画 */
-@keyframes coin-float {
-  0% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(-60px) scale(1.2);
     opacity: 1;
   }
   100% {
-    transform: translateY(-50px) rotate(360deg);
+    transform: translateY(-100px) scale(0.8);
     opacity: 0;
   }
 }
 
-.coin-animation {
-  animation: coin-float 1s ease-out forwards;
-}
-
-/* 进度条样式 */
+/* ========== 进度条样式 ========== */
 .farm-progress {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 999px;
   overflow: hidden;
-  height: 8px;
+  height: 6px;
+  position: relative;
 }
 
 .farm-progress-bar {
-  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
   height: 100%;
   border-radius: 999px;
-  transition: width 1s linear;
+  transition: width 0.5s ease-out;
   position: relative;
 }
 
 .farm-progress-bar::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: linear-gradient(
     90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
   );
-  animation: shimmer 2s infinite;
+  animation: progress-shimmer 2s ease-in-out infinite;
 }
 
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+@keyframes progress-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
-/* 按钮样式 */
+/* ========== 按钮样式 ========== */
 .farm-button {
   background: linear-gradient(145deg, #22c55e 0%, #16a34a 100%);
   color: white;
   font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
+  padding: 0.875rem 1.5rem;
+  border-radius: 14px;
   border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
 }
 
-.farm-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 10px -1px rgba(0, 0, 0, 0.15);
+.farm-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(255,255,255,0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.farm-button:hover::before {
+  opacity: 1;
 }
 
 .farm-button:active {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 .farm-button:disabled {
-  background: #9ca3af;
+  background: linear-gradient(145deg, #9ca3af 0%, #6b7280 100%);
   cursor: not-allowed;
   transform: none;
 }
 
-/* 卡片样式 */
+/* ========== 骨架屏加载 ========== */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ========== 卡片样式 ========== */
 .farm-card {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-/* 导航栏样式 */
+/* ========== 导航栏样式 ========== */
 .farm-nav {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* 天气效果 */
-.weather-sunny {
-  background: radial-gradient(circle at 80% 20%, #fef08a 0%, transparent 50%);
+/* ========== 底部导航（移动端） ========== */
+.mobile-nav {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-.weather-rain::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(transparent 0%, rgba(100, 150, 255, 0.1) 100%);
+.mobile-nav-item {
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-item:active {
+  transform: scale(0.9);
+}
+
+.mobile-nav-item.active {
+  color: #22c55e;
+}
+
+/* ========== 涟漪效果 ========== */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple-effect 0.6s ease-out;
   pointer-events: none;
-  animation: rain 0.5s linear infinite;
 }
 
-@keyframes rain {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 20px 40px;
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
   }
 }
 
-/* 响应式调整 */
+/* ========== 成功/失败反馈动画 ========== */
+.success-pop {
+  animation: success-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes success-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* ========== 响应式调整 ========== */
 @media (max-width: 640px) {
   .farm-land {
-    border-radius: 8px;
+    border-radius: 12px;
     border-width: 2px;
   }
   
-  .crop-icon {
-    font-size: 2rem;
+  .farm-button {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+  }
+  
+  .farm-card {
+    border-radius: 16px;
+  }
+  
+  /* 移动端优化触摸 */
+  .farm-land:active {
+    transform: scale(0.97);
   }
 }
 
-/* 滚动条样式 */
+/* ========== 安全区域适配 ========== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ========== 滚动条样式 ========== */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.15);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.25);
 }
 
-/* 加载动画 */
-@keyframes loading-dots {
-  0%, 80%, 100% {
-    transform: scale(0);
-  }
-  40% {
-    transform: scale(1);
-  }
-}
-
-.loading-dot {
-  animation: loading-dots 1.4s ease-in-out infinite both;
-}
-
-.loading-dot:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.loading-dot:nth-child(2) {
-  animation-delay: -0.16s;
-}
-
-/* Toast 样式调整 */
+/* ========== Toast 样式 ========== */
 [data-sonner-toaster] {
   --normal-bg: rgba(255, 255, 255, 0.95);
-  --normal-border: rgba(0, 0, 0, 0.1);
+  --normal-border: rgba(0, 0, 0, 0.08);
   font-family: inherit;
+}
+
+/* ========== 加载转圈 ========== */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ========== 下拉刷新提示 ========== */
+.pull-indicator {
+  transition: transform 0.2s ease;
+}
+
+.pull-indicator.pulling {
+  transform: rotate(180deg);
 }
