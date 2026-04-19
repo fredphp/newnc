@@ -550,3 +550,15 @@ model Notice {
 
   @@map("think_notice")
 }
+
+// ==================== 地块等级列表 ====================
+model LandClassList {
+  id              Int      @id @default(autoincrement())
+  landclass_name  String?     // 地块名称（如：戈壁滩、盐碱地、胶泥地、金沙地）
+  landclass_level String?     // 地块等级（1-4）
+  landclass_info  String?     // 升级所需材料 JSON（如：{"crops":"9:225;10:225","diamond":"300"}）
+  landclass_crops String?     // 可种植作物列表
+  land_img        String?     // 地块图片
+
+  @@map("think_land_class_list")
+}

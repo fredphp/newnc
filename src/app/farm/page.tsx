@@ -11,6 +11,9 @@ interface UserlistData {
   lvl: number;
   zhongzi: number;
   fangwu: number;  // 房屋等级
+  bg1: number;     // 背景1解锁状态
+  bg2: number;     // 背景2解锁状态
+  bg3: number;     // 背景3解锁状态
   hetao: string;
   shiliu: string;
   hongzao: string;
@@ -115,14 +118,16 @@ export default function FarmPage() {
   const createDefaultUserlist = (): UserlistData => {
     const data: any = {
       gold: '1000', zs: '10', rmb: '0', lvl: 1, zhongzi: 5, fangwu: 1,
+      bg1: 1, bg2: 0, bg3: 0,  // 默认解锁背景1
       hetao: '0', shiliu: '0', hongzao: '0', putao: '0',
       hamigua: '0', xiangli: '0', shamoguo: '0', rensheuguo: '0',
     };
     // 初始化12块土地状态
-    // tudi: 0=未开垦(灰色), 1=已开垦(亮色)
+    // tudi: 土地等级（1=戈壁滩, 2=盐碱地, 3=胶泥地, 4=金沙地）
+    // 默认所有已开垦土地都是等级1（戈壁滩）
     // zt: -1=未开垦, 0=空地可播种, 1=已播种, 2=枯萎
     for (let i = 1; i <= 12; i++) {
-      data[`tudi${i}`] = i === 1 ? 1 : 0;
+      data[`tudi${i}`] = i === 1 ? 1 : 0;  // 第一块土地等级1，其他未开垦
       data[`zt${i}`] = i === 1 ? '0' : '-1';
       data[`kttime${i}`] = null;
     }
@@ -153,6 +158,25 @@ export default function FarmPage() {
 
   return (
     <>
+      {/* 整体背景图 - 根据用户解锁的背景显示 */}
+      <div 
+        className="farm-background"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: user?.userlist?.bg1 ? 'url(/bg/bg1.jpg)' :
+                     user?.userlist?.bg2 ? 'url(/bg/bg2.jpg)' :
+                     user?.userlist?.bg3 ? 'url(/bg/bg3.jpg)' :
+                     'url(/bg/bg1.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          zIndex: -1,
+        }}
+      ></div>
+    
       <div id="load" style={{ display: 'none' }}>
         <img src="/picture/jiazai.gif" alt="" />
       </div>
@@ -216,16 +240,19 @@ export default function FarmPage() {
       <div className="easteBox">
         <ul className="easte">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => {
-            // tudi 字段直接存储土地图片编号（0-4）
-            // 0 = 未开垦（灰色土地）
-            // 1 = 已开垦（亮色土地）
-            // 2-4 = 其他状态
+            // tudi 字段存储土地等级（0=未开垦, 1-4=地块等级）
+            // 等级1=戈壁滩, 等级2=盐碱地, 等级3=胶泥地, 等级4=金沙地
             const tudi = user?.userlist?.[`tudi${i}`];
+            const zt = user?.userlist?.[`zt${i}`];
             const isActive = activeLand === i;
             
-            // 直接使用数据库中的 tudi 值作为图片编号
-            // 如果 tudi 为空或未定义，默认为 0（未开垦）
-            const tudiImage = tudi ?? 0;
+            // 根据土地等级和状态决定显示哪个图片
+            // tudi = 0: 未开垦（灰色土地 tudi0.png）
+            // tudi = 1-4: 已开垦，显示对应等级的土地图片
+            const tudiImage = tudi || 0;
+            
+            // 根据种植状态决定是否显示操作按钮
+            const canOperate = zt !== '-1';  // 已开垦的土地才能操作
             
             return (
               <li 
@@ -234,7 +261,7 @@ export default function FarmPage() {
                   background: `url(/images/tudi/tudi${tudiImage}.png)`, 
                   backgroundSize: 'cover' 
                 }}
-                onClick={() => handleLandClick(i)}
+                onClick={() => canOperate && handleLandClick(i)}
               >
                 <div className="opacity"></div>
                 <img style={{ opacity: 0 }} className="zuowu" alt="" />
@@ -242,7 +269,7 @@ export default function FarmPage() {
                 <img src="/picture/water.png" style={{ display: 'none' }} className="water" alt="" />
                 <img src="/picture/zacao.png" style={{ display: 'none' }} className="zacao" alt="" />
                 
-                {isActive && (
+                {isActive && canOperate && (
                   <>
                     <img src="/picture/bozhong.png" className="caozuoBtn animated bozhongBtn" alt="播种" />
                     <img src="/picture/chanchu.png" className="caozuoBtn animated chanchuBtn" alt="铲除" />
